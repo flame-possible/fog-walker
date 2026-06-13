@@ -1,0 +1,59 @@
+import 'package:geolocator/geolocator.dart';
+
+/// 위치 권한/서비스 상태를 앱 관점으로 단순화한 enum.
+enum LocationStatus {
+  /// 권한·서비스 모두 정상.
+  ready,
+
+  /// 위치 서비스(GPS) 자체가 꺼져 있음.
+  serviceDisabled,
+
+  /// 권한 거부됨 (다시 요청 가능).
+  denied,
+
+  /// 영구 거부됨 (앱 설정에서 켜야 함).
+  deniedForever,
+}
+
+/// geolocator를 감싼 위치 서비스.
+///
+/// 권한 흐름과 위치 스트림 설정을 한곳에 모은다. 노이즈 필터(정확도/순간이동)는
+/// 이 스트림을 받는 FogProvider에서 적용한다 — 서비스는 원시 위치만 제공.
+class LocationService {
+  /// 현재 권한·서비스 상태를 확인하고, 필요 시 권한을 요청한다.
+  Future<LocationStatus> ensurePermission() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return LocationStatus.serviceDisabled;
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return LocationStatus.deniedForever;
+    }
+    if (permission == LocationPermission.denied) {
+      return LocationStatus.denied;
+    }
+    return LocationStatus.ready;
+  }
+
+  /// 위치 변경 스트림. 10m 이상 움직였을 때만 이벤트(배터리·노이즈 절감).
+  Stream<Position> positionStream() {
+    const settings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    );
+    return Geolocator.getPositionStream(locationSettings: settings);
+  }
+
+  /// 현재 위치 1회 조회 (지도 초기 중심용).
+  Future<Position> currentPosition() => Geolocator.getCurrentPosition();
+
+  /// 마지막으로 알려진 위치 (빠른 초기화용, 없으면 null).
+  Future<Position?> lastKnown() => Geolocator.getLastKnownPosition();
+
+  /// 앱 설정 화면 열기 (영구 거부 시).
+  Future<bool> openAppSettings() => Geolocator.openAppSettings();
+}
