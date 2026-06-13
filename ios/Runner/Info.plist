@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>걸어다니며 안개를 걷어내려면 위치 정보가 필요해요.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>걸어다니며 안개를 걷어내려면 위치 정보가 필요해요.</string>
 </dict>
 </plist>

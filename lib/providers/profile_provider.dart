@@ -20,7 +20,9 @@ class ProfileProvider extends ChangeNotifier {
     _profile.stampCount = stampCount;
     _profile.level = 1 + stampCount ~/ 5; // 5도장마다 레벨업(간단 규칙)
     _profile.tier = _tierFor(_profile.level);
-    _profile.save();
+    // put을 쓰면 박스에 없던 객체(initial)도 안전하게 저장된다.
+    // (HiveObject.save()는 박스에 귀속된 객체에만 동작)
+    _box?.put(_key, _profile);
     notifyListeners();
   }
 

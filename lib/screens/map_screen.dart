@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -68,9 +69,14 @@ class _MapScreenState extends State<MapScreen> {
     _posSub = _location.positionStream().listen(_handleLocation);
   }
 
-  /// 위치 이벤트를 받아 세 Provider를 조율한다(단방향 흐름).
+  /// 실제 GPS 위치 이벤트.
   void _handleLocation(Position pos) {
-    final point = LatLng(pos.latitude, pos.longitude);
+    _applyPoint(LatLng(pos.latitude, pos.longitude), pos.accuracy);
+  }
+
+  /// 위치를 받아 세 Provider를 조율한다(단방향 흐름). 실제 GPS와 디버그
+  /// 위치 주입이 공유하는 경로.
+  void _applyPoint(LatLng point, double accuracy) {
     final fog = context.read<FogProvider>();
     final walk = context.read<WalkSessionProvider>();
     final collection = context.read<CollectionProvider>();
@@ -79,19 +85,18 @@ class _MapScreenState extends State<MapScreen> {
     final cell = FogGrid.cellOf(point);
     final regionId = collection.repository.matcher.regionOfCell(cell);
 
-    // 1) 안개 걷기 (새 셀이 생기면 콜백으로 해금/세션 누적)
+    // 안개 걷기 (새 셀이 생기면 콜백으로 해금/세션 누적)
     fog.onNewCells = (fresh) {
       final unlocked = collection.checkUnlocks(fresh);
       walk.onMove(point, newCellCount: fresh.length, regionId: regionId);
       if (unlocked.isNotEmpty) {
-        // 도장 수/레벨 갱신
         context.read<ProfileProvider>().syncProgress(
               stampCount: collection.unlockedCount,
             );
         _showUnlockSnack(unlocked.length);
       }
     };
-    fog.onLocation(point, accuracy: pos.accuracy);
+    fog.onLocation(point, accuracy: accuracy);
 
     if (mounted) {
       setState(() {
@@ -150,6 +155,13 @@ class _MapScreenState extends State<MapScreen> {
             setState(() => _followMe = false);
           }
         },
+        // 디버그: 길게 누른 지점으로 위치를 주입해 안개 걷힘을 시연/검증.
+        onLongPress: kDebugMode
+            ? (tapPosition, point) {
+                setState(() => _followMe = false);
+                _applyPoint(point, 10);
+              }
+            : null,
       ),
       children: [
         TileLayer(

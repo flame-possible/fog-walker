@@ -52,7 +52,16 @@ class LocationService {
   Future<Position> currentPosition() => Geolocator.getCurrentPosition();
 
   /// 마지막으로 알려진 위치 (빠른 초기화용, 없으면 null).
-  Future<Position?> lastKnown() => Geolocator.getLastKnownPosition();
+  ///
+  /// 웹 등 일부 플랫폼은 getLastKnownPosition을 지원하지 않으므로 예외를
+  /// 삼키고 null을 반환한다. (초기 중심은 currentPosition으로 보완)
+  Future<Position?> lastKnown() async {
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// 앱 설정 화면 열기 (영구 거부 시).
   Future<bool> openAppSettings() => Geolocator.openAppSettings();

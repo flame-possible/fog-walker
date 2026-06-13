@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- OSM 타일 다운로드 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 안개를 걷기 위한 위치 추적 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="fog_walker"
         android:name="${applicationName}"

@@ -21,8 +21,8 @@ class AppColors {
   static const paperDim = Color(0xFFF2F1ED);
   static const line = Color(0xFFE6E4DF);
 
-  /// 안개 오버레이 색 (지도 위 반투명 회백색).
-  static const fog = Color(0xFFB9BEC4);
+  /// 안개 오버레이 색 (지도 위 반투명 밝은 회백색 — 구름 느낌).
+  static const fog = Color(0xFFE8EAED);
 
   /// 여권 카드 홀로그램 파스텔.
   static const holoPink = Color(0xFFF7D9E3);

@@ -72,7 +72,7 @@ class CollectionProvider extends ChangeNotifier {
     final p = box.get(regionId);
     if (p != null) {
       p.visitCount++;
-      p.save();
+      box.put(regionId, p);
       notifyListeners();
     }
   }

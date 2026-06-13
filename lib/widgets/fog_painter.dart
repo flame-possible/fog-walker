@@ -29,7 +29,7 @@ class FogPainter extends CustomPainter {
     canvas.saveLayer(rect, Paint());
 
     // 1) 화면 전체를 안개로 덮는다.
-    final fogPaint = Paint()..color = AppColors.fog.withValues(alpha: 0.92);
+    final fogPaint = Paint()..color = AppColors.fog.withValues(alpha: 0.95);
     canvas.drawRect(rect, fogPaint);
 
     if (visitedCells.isNotEmpty) {
@@ -62,9 +62,9 @@ class FogPainter extends CustomPainter {
       LatLng(c.latitude + deltaLat, c.longitude),
     );
     final dy = (p2.dy - p1.dy).abs();
-    // 셀 절반보다 약간 크게 잡아 인접 원들이 매끄럽게 이어지도록.
-    final r = dy * 0.9;
-    return r.clamp(6.0, 400.0);
+    // 셀 크기보다 크게 잡아 인접 원들이 확실히 겹쳐 길이 매끄럽게 이어지도록.
+    final r = dy * 1.4;
+    return r.clamp(10.0, 400.0);
   }
 
   /// 화면에 보이는 위경도 범위를 반경만큼 넓힌 것.

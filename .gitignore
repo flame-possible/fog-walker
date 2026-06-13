@@ -46,3 +46,7 @@ app.*.map.json
 
 # 가공 전 원본 데이터 (가공 스크립트로 재생성 가능)
 tool/seoul_raw.geojson
+
+# 검증용 임시 산출물 (Playwright 캡처)
+.playwright-mcp/
+/[0-9][0-9]_*.png

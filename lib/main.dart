@@ -62,31 +62,38 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<_AppDependencies>(
+      future: _init,
+      builder: (context, snapshot) {
+        // 로딩/에러 단계: Provider 없는 단순 MaterialApp.
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _wrapApp(const _SplashScreen());
+        }
+        if (snapshot.hasError) {
+          return _wrapApp(_ErrorScreen(error: snapshot.error.toString()));
+        }
+        // 준비 완료: Provider를 MaterialApp '위'에 두어 모든 라우트
+        // (Navigator.push로 연 화면 포함)가 Provider에 접근하게 한다.
+        final deps = snapshot.data!;
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: deps.fog),
+            ChangeNotifierProvider.value(value: deps.walk),
+            ChangeNotifierProvider.value(value: deps.collection),
+            ChangeNotifierProvider.value(value: deps.profile),
+          ],
+          child: _wrapApp(const HomeShell()),
+        );
+      },
+    );
+  }
+
+  Widget _wrapApp(Widget home) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Fog Walker',
       theme: AppTheme.light(),
-      home: FutureBuilder<_AppDependencies>(
-        future: _init,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const _SplashScreen();
-          }
-          if (snapshot.hasError) {
-            return _ErrorScreen(error: snapshot.error.toString());
-          }
-          final deps = snapshot.data!;
-          return MultiProvider(
-            providers: [
-              ChangeNotifierProvider.value(value: deps.fog),
-              ChangeNotifierProvider.value(value: deps.walk),
-              ChangeNotifierProvider.value(value: deps.collection),
-              ChangeNotifierProvider.value(value: deps.profile),
-            ],
-            child: const HomeShell(),
-          );
-        },
-      ),
+      home: home,
     );
   }
 }
