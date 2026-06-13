@@ -1,17 +1,72 @@
-# fog_walker
+# Fog Walker
 
-A new Flutter project.
+**걸어서 안개를 걷어내는 산책 수집 앱**
 
-## Getting Started
+실제 GPS로 걸으면 지도를 덮은 안개가 지나간 경로를 따라 걷히고, 실제 행정동
+경계를 기준으로 동네가 해금되며 여권 도장처럼 수집된다. (MVP: 서울)
 
-This project is a starting point for a Flutter application.
+## 화면
 
-A few resources to get you started if this is your first Flutter project:
+| 화면 | 설명 |
+|---|---|
+| 지도 | OSM 지도 + 안개 오버레이 + GPS 추적. 걸으면 안개가 걷힌다. |
+| 여권(Passport) | 국가별 여권 컬렉션. 한국 → 서울 도장들 → 동네 상세. |
+| 업적(Achievement) | 거리·연속일·해금 수 기반 진행도. |
+| 내 정보(My Info) | 여권 프로필 + 걸어낸 면적 + This Week 기록. |
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## 실행
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run            # 실기기/에뮬레이터 (실제 GPS 권장)
+```
+
+웹으로 빠르게 보려면:
+
+```bash
+flutter run -d chrome
+```
+
+> 웹/에뮬레이터처럼 GPS가 없는 환경에서는 **디버그 빌드 한정**으로 지도를
+> **길게 누르면(long-press)** 그 지점으로 위치가 주입되어 안개 걷힘을 시연할 수
+> 있다. (release 빌드에는 포함되지 않음)
+
+## 테스트
+
+```bash
+flutter test           # 도메인/Provider 단위 테스트
+flutter analyze        # 정적 분석
+```
+
+## 구조
+
+```
+lib/
+├── domain/      순수 로직 (FogGrid, AreaCalculator, RegionMatcher,
+│                WalkStats, Achievement) — 위젯 없이 단위 테스트
+├── data/        영속화 (Hive 박스, FogRepository, RegionRepository)
+├── models/      Hive 모델 (WalkSession, UserProfile, RegionProgress)
+├── providers/   상태관리 (Fog/WalkSession/Collection/Profile)
+├── screens/     화면
+├── widgets/     공통 위젯 (StampWidget, PassportCard, FogPainter)
+└── theme/       디자인 토큰
+```
+
+핵심 원칙: **저장하는 것은 사실(방문 셀·끝난 산책·해금 지역)뿐, 나머지(면적·
+클리어%·통계·업적 진행도)는 거기서 파생한다.**
+
+## 데이터 재생성 (서울 행정동)
+
+`assets/data/seoul_dong.geojson`은 공개 행정동 경계 데이터를 가공한 것이다.
+재생성하려면:
+
+```bash
+# 1) 원본 다운로드 (raqoon886/Local_HangJeongDong)
+curl -sL "https://raw.githubusercontent.com/raqoon886/Local_HangJeongDong/master/hangjeongdong_서울특별시.geojson" -o tool/seoul_raw.geojson
+# 2) 가공 (서울 추출 + 폴리곤 단순화)
+dart run tool/build_seoul_geojson.dart
+```
+
+## 기술 스택
+
+flutter_map (OSM) · geolocator · hive · provider · latlong2 · google_fonts
