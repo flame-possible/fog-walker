@@ -49,7 +49,21 @@ class LocationService {
   }
 
   /// 현재 위치 1회 조회 (지도 초기 중심용).
-  Future<Position> currentPosition() => Geolocator.getCurrentPosition();
+  ///
+  /// 브라우저 권한 거부, 타임아웃, 플랫폼 미지원 등은 지도 초기화 전체를
+  /// 멈추지 않도록 null로 접는다.
+  Future<Position?> currentPosition() async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 12),
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// 마지막으로 알려진 위치 (빠른 초기화용, 없으면 null).
   ///
@@ -64,5 +78,13 @@ class LocationService {
   }
 
   /// 앱 설정 화면 열기 (영구 거부 시).
-  Future<bool> openAppSettings() => Geolocator.openAppSettings();
+  ///
+  /// 웹은 이 API를 지원하지 않으므로 false로 반환한다.
+  Future<bool> openAppSettings() async {
+    try {
+      return await Geolocator.openAppSettings();
+    } catch (_) {
+      return false;
+    }
+  }
 }

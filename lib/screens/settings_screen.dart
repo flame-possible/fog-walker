@@ -55,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _actionRow(
             title: '위치 권한',
             subtitle: '권한을 다시 표시',
-            onTap: () => _location.openAppSettings(),
+            onTap: _openLocationSettings,
           ),
           const SizedBox(height: 28),
           _sectionLabel('위치와 기록'),
@@ -118,6 +118,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final account = await auth.signInWithGoogle();
     if (account != null && mounted) {
       profile.syncAccount(account);
+    }
+  }
+
+  Future<void> _openLocationSettings() async {
+    final opened = await _location.openAppSettings();
+    if (!opened && mounted) {
+      _toast('브라우저 주소창의 위치 권한을 허용한 뒤 다시 확인해 주세요.');
     }
   }
 

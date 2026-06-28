@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -54,24 +54,45 @@ class _MapScreenState extends State<MapScreen> {
     setState(() => _status = status);
 
     if (status == LocationStatus.ready) {
-      // 빠른 초기 중심: 마지막 위치
-      final last = await _location.lastKnown();
-      if (last != null && mounted) {
-        setState(() => _center = LatLng(last.latitude, last.longitude));
-        _mapController.move(_center, 16);
-      }
+      await _applyInitialLocation();
       _startTracking();
+    }
+  }
+
+  Future<void> _applyInitialLocation() async {
+    // 빠른 초기 중심: 마지막 위치가 있으면 먼저 반영한다.
+    final last = await _location.lastKnown();
+    if (last != null && mounted) {
+      _applyPoint(LatLng(last.latitude, last.longitude), last.accuracy);
+    }
+
+    // 웹은 lastKnownPosition을 지원하지 않는 경우가 많아서 현재 위치를
+    // 한 번 직접 조회해 첫 화면부터 실제 위치에 맞춘다.
+    final current = await _location.currentPosition();
+    if (current != null && mounted) {
+      _applyPoint(
+        LatLng(current.latitude, current.longitude),
+        current.accuracy,
+      );
     }
   }
 
   void _startTracking() {
     _posSub?.cancel();
-    _posSub = _location.positionStream().listen(_handleLocation);
+    _posSub = _location.positionStream().listen(
+      _handleLocation,
+      onError: _handleLocationError,
+    );
   }
 
   /// 실제 GPS 위치 이벤트.
   void _handleLocation(Position pos) {
     _applyPoint(LatLng(pos.latitude, pos.longitude), pos.accuracy);
+  }
+
+  void _handleLocationError(Object error) {
+    if (!mounted) return;
+    setState(() => _status = LocationStatus.denied);
   }
 
   /// 위치를 받아 세 Provider를 조율한다(단방향 흐름). 실제 GPS와 디버그
@@ -310,9 +331,15 @@ class _MapScreenState extends State<MapScreen> {
         onTap = _initLocation;
         break;
       case LocationStatus.deniedForever:
-        msg = '안개를 걷으려면 위치 권한이 필요해요.';
-        action = '설정 열기';
-        onTap = () => _location.openAppSettings();
+        if (kIsWeb) {
+          msg = '브라우저에서 위치 권한이 막혀 있어요.';
+          action = '권한 확인';
+          onTap = _initLocation;
+        } else {
+          msg = '안개를 걷으려면 위치 권한이 필요해요.';
+          action = '설정 열기';
+          onTap = () => _location.openAppSettings();
+        }
         break;
       case LocationStatus.denied:
         msg = '안개를 걷으려면 위치 권한이 필요해요.';
