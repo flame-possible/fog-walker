@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:fog_walker/models/auth_account.dart';
 import 'package:fog_walker/models/user_profile.dart';
 import 'package:fog_walker/providers/profile_provider.dart';
 
@@ -14,6 +15,9 @@ void main() {
     Hive.init(tempDir.path);
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(UserProfileAdapter());
+    }
+    if (!Hive.isAdapterRegistered(4)) {
+      Hive.registerAdapter(AuthProviderTypeAdapter());
     }
     box = await Hive.openBox<UserProfile>('userProfile_test');
   });
@@ -48,6 +52,27 @@ void main() {
       expect(provider.profile.tier, 'Newcomer');
       provider.syncProgress(stampCount: 60); // level 13 → Wanderer
       expect(provider.profile.tier, 'Wanderer');
+    });
+
+    test('Google account sync keeps progress values', () {
+      final provider = ProfileProvider(box: box);
+      provider.syncProgress(stampCount: 12);
+
+      provider.syncAccount(
+        const AuthAccount(
+          id: 'supabase-user-1',
+          email: 'yang@example.com',
+          displayName: 'Yang Walker',
+          photoUrl: 'https://example.com/photo.png',
+        ),
+      );
+
+      expect(provider.profile.authProvider, AuthProviderType.supabaseGoogle);
+      expect(provider.profile.supabaseUserId, 'supabase-user-1');
+      expect(provider.profile.email, 'yang@example.com');
+      expect(provider.profile.displayName, 'Yang Walker');
+      expect(provider.profile.stampCount, 12);
+      expect(provider.profile.level, 3);
     });
   });
 }

@@ -31,6 +31,7 @@ class AppDatabase {
     Hive.registerAdapter(WalkSessionAdapter());
     Hive.registerAdapter(WalkModeAdapter());
     Hive.registerAdapter(UserProfileAdapter());
+    Hive.registerAdapter(AuthProviderTypeAdapter());
     Hive.registerAdapter(RegionProgressAdapter());
 
     visitedCells = await Hive.openBox<int>(visitedCellsBox);

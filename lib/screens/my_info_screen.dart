@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/walk_stats.dart';
+import '../providers/auth_provider.dart';
 import '../providers/collection_provider.dart';
 import '../providers/fog_provider.dart';
 import '../providers/profile_provider.dart';
@@ -23,6 +24,7 @@ class MyInfoScreen extends StatelessWidget {
     final fog = context.watch<FogProvider>();
     final walk = context.watch<WalkSessionProvider>();
     final collection = context.watch<CollectionProvider>();
+    final auth = context.watch<AuthProvider>();
 
     final area = fog.totalAreaKm2;
     final weekly = walk.weekly;
@@ -37,6 +39,8 @@ class MyInfoScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           PassportCard(profile: profile),
+          const SizedBox(height: 12),
+          _accountSection(context, auth, context.read<ProfileProvider>()),
           const SizedBox(height: 28),
           _sectionTitle('Stats'),
           const SizedBox(height: 10),
@@ -100,6 +104,97 @@ class MyInfoScreen extends StatelessWidget {
 
   Widget _sectionTitle(String t) =>
       Text(t, style: AppType.serif(size: 22, weight: FontWeight.w700));
+
+  Widget _accountSection(
+    BuildContext context,
+    AuthProvider auth,
+    ProfileProvider profileProvider,
+  ) {
+    final account = auth.account;
+    if (!auth.isConfigured) {
+      return _accountBox(
+        title: '계정 연결 준비 중',
+        subtitle: 'Google 로그인은 배포 설정이 끝나면 사용할 수 있어요.',
+        child: const SizedBox.shrink(),
+      );
+    }
+
+    if (account != null) {
+      return _accountBox(
+        title: account.displayName ?? 'Google 계정',
+        subtitle: account.email ?? '로그인됨',
+        child: TextButton.icon(
+          onPressed: auth.isLoading
+              ? null
+              : () async {
+                  await auth.signOut();
+                  profileProvider.clearAccount();
+                },
+          icon: const Icon(Icons.logout, size: 18),
+          label: const Text('로그아웃'),
+        ),
+      );
+    }
+
+    return _accountBox(
+      title: 'Google 계정 연결',
+      subtitle: auth.errorMessage ?? '웹과 모바일에서 같은 프로필을 사용할 수 있어요.',
+      child: FilledButton.icon(
+        onPressed: auth.isLoading
+            ? null
+            : () async {
+                final account = await auth.signInWithGoogle();
+                if (account != null && context.mounted) {
+                  profileProvider.syncAccount(account);
+                }
+              },
+        icon: const Icon(Icons.login, size: 18),
+        label: Text(auth.isLoading ? '연결 중' : 'Google로 로그인'),
+      ),
+    );
+  }
+
+  Widget _accountBox({
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppType.sans(
+                    size: 15,
+                    weight: FontWeight.w800,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: AppType.sans(size: 12, color: AppColors.inkFaint),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          child,
+        ],
+      ),
+    );
+  }
 
   /// 면적을 크기에 맞춰 포맷 (작으면 m², 크면 km²).
   String _areaText(double km2) {

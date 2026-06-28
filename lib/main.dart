@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'config/supabase_config.dart';
 import 'data/app_database.dart';
 import 'data/fog_repository.dart';
 import 'data/region_repository.dart';
+import 'providers/auth_provider.dart';
 import 'providers/collection_provider.dart';
 import 'providers/fog_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/walk_session_provider.dart';
 import 'screens/home_shell.dart';
+import 'services/auth_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_typography.dart';
@@ -38,6 +41,8 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
   }
 
   Future<_AppDependencies> _bootstrap() async {
+    const supabaseConfig = SupabaseConfig.fromEnvironment;
+    await SupabaseAuthService.initialize(supabaseConfig);
     await AppDatabase.init();
     final regionRepo = await RegionRepository.load();
     final fogRepo = FogRepository(AppDatabase.visitedCells);
@@ -51,12 +56,20 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
     );
     final profile = ProfileProvider(box: AppDatabase.userProfile)
       ..syncProgress(stampCount: collection.unlockedCount);
+    final auth = AuthProvider(
+      service: SupabaseAuthService(config: supabaseConfig),
+    );
+    final account = auth.account;
+    if (account != null) {
+      profile.syncAccount(account);
+    }
 
     return _AppDependencies(
       fog: fog,
       walk: walk,
       collection: collection,
       profile: profile,
+      auth: auth,
     );
   }
 
@@ -81,6 +94,7 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
             ChangeNotifierProvider.value(value: deps.walk),
             ChangeNotifierProvider.value(value: deps.collection),
             ChangeNotifierProvider.value(value: deps.profile),
+            ChangeNotifierProvider.value(value: deps.auth),
           ],
           child: _wrapApp(const HomeShell()),
         );
@@ -104,11 +118,13 @@ class _AppDependencies {
     required this.walk,
     required this.collection,
     required this.profile,
+    required this.auth,
   });
   final FogProvider fog;
   final WalkSessionProvider walk;
   final CollectionProvider collection;
   final ProfileProvider profile;
+  final AuthProvider auth;
 }
 
 class _SplashScreen extends StatelessWidget {

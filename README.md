@@ -27,9 +27,34 @@ flutter run            # 실기기/에뮬레이터 (실제 GPS 권장)
 flutter run -d chrome
 ```
 
+Supabase Google 로그인을 켜서 실행하려면:
+
+```bash
+flutter run -d chrome \
+  --dart-define=SUPABASE_URL=https://example.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=public-anon-key-from-dashboard \
+  --dart-define=SUPABASE_WEB_REDIRECT_URL=http://localhost:8080
+```
+
 > 웹/에뮬레이터처럼 GPS가 없는 환경에서는 **디버그 빌드 한정**으로 지도를
 > **길게 누르면(long-press)** 그 지점으로 위치가 주입되어 안개 걷힘을 시연할 수
 > 있다. (release 빌드에는 포함되지 않음)
+
+## Supabase와 Vercel 웹 배포
+
+앱은 Supabase 환경 변수가 없으면 로컬 모드로 실행되고, 값이 있으면 Google
+로그인을 활성화한다.
+
+Vercel 환경 변수:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_WEB_REDIRECT_URL`
+- `FLUTTER_VERSION` (선택, 기본 `stable`)
+
+Vercel은 `scripts/vercel-build.sh`를 실행하고 `build/web`을 배포한다. Supabase
+Dashboard의 Google provider에는 Vercel production/preview URL과
+`fogwalker://login-callback/` redirect URL을 등록한다.
 
 ## 테스트
 

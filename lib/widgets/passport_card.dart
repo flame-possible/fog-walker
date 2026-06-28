@@ -12,6 +12,8 @@ class PassportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final name = profile.effectiveName;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -48,7 +50,7 @@ class PassportCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _field('Name', profile.name),
+                    _field('Name', name),
                     const SizedBox(height: 10),
                     _field('ID', profile.passportId),
                     const SizedBox(height: 10),
@@ -87,7 +89,7 @@ class PassportCard extends StatelessWidget {
   }
 
   Widget _photo(UserProfile profile) {
-    final initials = profile.name
+    final initials = profile.effectiveName
         .split(RegExp(r'\s+'))
         .where((part) => part.isNotEmpty)
         .take(2)

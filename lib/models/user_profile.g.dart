@@ -22,13 +22,18 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       level: fields[2] as int,
       tier: fields[3] as String,
       stampCount: fields[4] as int,
+      authProvider: fields[5] as AuthProviderType? ?? AuthProviderType.local,
+      supabaseUserId: fields[6] as String?,
+      email: fields[7] as String?,
+      photoUrl: fields[8] as String?,
+      displayName: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -38,7 +43,17 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(3)
       ..write(obj.tier)
       ..writeByte(4)
-      ..write(obj.stampCount);
+      ..write(obj.stampCount)
+      ..writeByte(5)
+      ..write(obj.authProvider)
+      ..writeByte(6)
+      ..write(obj.supabaseUserId)
+      ..writeByte(7)
+      ..write(obj.email)
+      ..writeByte(8)
+      ..write(obj.photoUrl)
+      ..writeByte(9)
+      ..write(obj.displayName);
   }
 
   @override
@@ -48,6 +63,45 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is UserProfileAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class AuthProviderTypeAdapter extends TypeAdapter<AuthProviderType> {
+  @override
+  final int typeId = 4;
+
+  @override
+  AuthProviderType read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return AuthProviderType.local;
+      case 1:
+        return AuthProviderType.supabaseGoogle;
+      default:
+        return AuthProviderType.local;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, AuthProviderType obj) {
+    switch (obj) {
+      case AuthProviderType.local:
+        writer.writeByte(0);
+        break;
+      case AuthProviderType.supabaseGoogle:
+        writer.writeByte(1);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuthProviderTypeAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
