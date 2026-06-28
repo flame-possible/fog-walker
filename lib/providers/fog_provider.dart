@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../data/fog_repository.dart';
 import '../domain/area_calculator.dart';
 import '../domain/fog_grid.dart';
+import '../domain/location_update_policy.dart';
 
 /// 한 위치 이벤트를 안개 엔진에 적용한 결과.
 class FogUpdate {
@@ -39,7 +40,8 @@ class FogProvider extends ChangeNotifier {
   static const double clearRadiusMeters = 30;
 
   /// 이 정확도(미터)보다 나쁜 신호는 무시.
-  static const double maxAccuracyMeters = 50;
+  static const double maxAccuracyMeters =
+      LocationUpdatePolicy.maxFogAccuracyMeters;
 
   /// 두 위치 이벤트 사이 이 거리(미터)를 넘으면 순간이동으로 보고 무시.
   static const double teleportThresholdMeters = 1000;
@@ -57,7 +59,9 @@ class FogProvider extends ChangeNotifier {
   /// 새 위치 처리. 노이즈를 거른 뒤 주변 셀을 걷어내고 처리 결과를 반환한다.
   FogUpdate onLocation(LatLng point, {required double accuracy}) {
     // 1) 정확도 필터
-    if (accuracy > maxAccuracyMeters) return FogUpdate.ignored;
+    if (!LocationUpdatePolicy.canClearFog(accuracy: accuracy)) {
+      return FogUpdate.ignored;
+    }
 
     // 2) 순간이동 필터
     final last = _lastPoint;

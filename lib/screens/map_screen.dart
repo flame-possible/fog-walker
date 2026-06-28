@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/fog_grid.dart';
+import '../domain/location_update_policy.dart';
 import '../providers/collection_provider.dart';
 import '../providers/fog_provider.dart';
 import '../providers/profile_provider.dart';
@@ -106,6 +107,10 @@ class _MapScreenState extends State<MapScreen> {
     final cell = FogGrid.cellOf(point);
     final regionId = collection.repository.matcher.regionOfCell(cell);
 
+    if (LocationUpdatePolicy.canUpdateMap(accuracy: accuracy)) {
+      _moveMapTo(point, regionId);
+    }
+
     final update = fog.onLocation(point, accuracy: accuracy);
 
     if (!update.accepted) return;
@@ -127,14 +132,15 @@ class _MapScreenState extends State<MapScreen> {
         _showUnlockSnack(unlocked.length);
       }
     }
+  }
 
-    if (mounted) {
-      setState(() {
-        _center = point;
-        _currentRegionId = regionId;
-      });
-      if (_followMe) _mapController.move(point, _mapController.camera.zoom);
-    }
+  void _moveMapTo(LatLng point, String? regionId) {
+    if (!mounted) return;
+    setState(() {
+      _center = point;
+      _currentRegionId = regionId;
+    });
+    if (_followMe) _mapController.move(point, _mapController.camera.zoom);
   }
 
   void _showUnlockSnack(int count) {
