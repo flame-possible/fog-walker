@@ -5,10 +5,11 @@ import 'achievement_screen.dart';
 import 'map_screen.dart';
 import 'my_info_screen.dart';
 import 'passport_screen.dart';
+import 'settings_screen.dart';
 
-/// 하단 탭 4개를 묶는 앱 셸.
+/// 하단 탭 5개를 묶는 앱 셸.
 ///
-/// 지도 / 여권(컬렉션) / 업적 / 내 정보. IndexedStack으로 탭 전환 시 각 화면
+/// 지도 / 여권(컬렉션) / 업적 / 내 정보 / 설정. IndexedStack으로 탭 전환 시 각 화면
 /// 상태(지도 위치 등)를 보존한다.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -25,6 +26,7 @@ class _HomeShellState extends State<HomeShell> {
     PassportScreen(),
     AchievementScreen(),
     MyInfoScreen(),
+    SettingsScreen(),
   ];
 
   @override
@@ -43,9 +45,14 @@ class _HomeShellState extends State<HomeShell> {
             child: Row(
               children: [
                 _tab(0, Icons.map_outlined, Icons.map),
-                _tab(1, Icons.camera_alt_outlined, Icons.camera_alt),
-                _tab(2, Icons.military_tech_outlined, Icons.military_tech),
-                _tab(3, Icons.settings_outlined, Icons.settings),
+                _tab(1, Icons.wallet_outlined, Icons.wallet),
+                _tab(
+                  2,
+                  Icons.workspace_premium_outlined,
+                  Icons.workspace_premium,
+                ),
+                _tab(3, Icons.person_outline, Icons.person),
+                _tab(4, Icons.settings_outlined, Icons.settings),
               ],
             ),
           ),

@@ -138,7 +138,6 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final fog = context.watch<FogProvider>();
-    final walk = context.watch<WalkSessionProvider>();
 
     return Scaffold(
       body: Stack(
@@ -147,7 +146,6 @@ class _MapScreenState extends State<MapScreen> {
           _buildTopChip(),
           if (_status != LocationStatus.ready) _buildPermissionBanner(),
           _buildRecenterButton(),
-          _buildWalkButton(walk),
         ],
       ),
     );
@@ -281,7 +279,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildRecenterButton() {
     return Positioned(
       right: 16,
-      bottom: 110,
+      bottom: 24,
       child: Material(
         color: AppColors.paper,
         shape: const CircleBorder(),
@@ -299,86 +297,6 @@ class _MapScreenState extends State<MapScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildWalkButton(WalkSessionProvider walk) {
-    final walking = walk.isWalking;
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 28,
-      child: Center(
-        child: GestureDetector(
-          onTap: () => _toggleWalk(walk),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
-            decoration: BoxDecoration(
-              color: walking ? AppColors.ink : AppColors.stampRed,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: (walking ? AppColors.ink : AppColors.stampRed)
-                      .withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  walking ? Icons.stop : Icons.play_arrow,
-                  color: Colors.white,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  walking
-                      ? '산책 종료 · ${walk.activeDistanceKm.toStringAsFixed(2)}km'
-                      : '산책 시작',
-                  style: AppType.sans(
-                    size: 15,
-                    weight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _toggleWalk(WalkSessionProvider walk) async {
-    if (walk.isWalking) {
-      final session = await walk.stop();
-      if (session != null && mounted) {
-        // 지나간 지역 방문 횟수 기록
-        final collection = context.read<CollectionProvider>();
-        for (final id in session.regionIds) {
-          collection.recordVisit(id);
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '산책 완료 · ${session.distanceKm.toStringAsFixed(2)}km · '
-              '${session.newCellsCount}칸 발견',
-              style: AppType.sans(color: Colors.white),
-            ),
-            backgroundColor: AppColors.stampRed,
-          ),
-        );
-      }
-    } else {
-      if (_status != LocationStatus.ready) {
-        await _initLocation();
-        if (_status != LocationStatus.ready) return;
-      }
-      walk.start();
-    }
   }
 
   Widget _buildPermissionBanner() {
