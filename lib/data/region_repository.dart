@@ -20,11 +20,11 @@ class CityInfo {
   final String countryId;
 
   factory CityInfo.fromJson(Map<String, dynamic> json) => CityInfo(
-        id: json['id'] as String,
-        nameKo: json['nameKo'] as String,
-        nameEn: json['nameEn'] as String,
-        countryId: json['countryId'] as String,
-      );
+    id: json['id'] as String,
+    nameKo: json['nameKo'] as String,
+    nameEn: json['nameEn'] as String,
+    countryId: json['countryId'] as String,
+  );
 }
 
 /// assets GeoJSON에서 지역 메타/도형을 로드한다.
@@ -43,6 +43,10 @@ class RegionRepository {
   final RegionMatcher matcher;
 
   Map<String, RegionMeta> get byId => {for (final r in regions) r.id: r};
+  String get countryNameKo =>
+      city.countryId == 'kr' ? '대한민국' : city.countryId.toUpperCase();
+  String get dataPackId =>
+      regions.isEmpty ? 'kr-seoul' : regions.first.dataPackId;
 
   static const _assetPath = 'assets/data/seoul_dong.geojson';
 
@@ -77,8 +81,7 @@ class RegionRepository {
   /// About 텍스트 보강. 잘 알려진 동은 실제 설명, 나머지는 구 기반 기본 문구.
   static RegionMeta _withAbout(RegionMeta r) {
     final known = _aboutByDong[r.nameKo];
-    final about = known ??
-        '서울 ${r.districtKo}에 속한 동네. 골목을 따라 걸으며 안개를 걷어내 보세요.';
+    final about = known ?? '서울 ${r.districtKo}에 속한 동네. 골목을 따라 걸으며 안개를 걷어내 보세요.';
     return RegionMeta(
       id: r.id,
       nameKo: r.nameKo,
@@ -87,6 +90,13 @@ class RegionRepository {
       districtKo: r.districtKo,
       districtEn: r.districtEn,
       shape: r.shape,
+      parentId: r.parentId,
+      countryId: r.countryId,
+      level: r.level,
+      kind: r.kind,
+      localName: r.localName,
+      dataPackId: r.dataPackId,
+      hierarchyPath: r.hierarchyPath,
       about: about,
     );
   }

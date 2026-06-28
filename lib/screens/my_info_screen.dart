@@ -31,32 +31,43 @@ class MyInfoScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          Text('My Information',
-              style: AppType.serif(size: 30, weight: FontWeight.w800)),
+          Text(
+            'My Information',
+            style: AppType.serif(size: 30, weight: FontWeight.w800),
+          ),
           const SizedBox(height: 18),
           PassportCard(profile: profile),
           const SizedBox(height: 28),
           _sectionTitle('Stats'),
           const SizedBox(height: 10),
-          Text('걸어낸 안개',
-              style: AppType.sans(size: 13, color: AppColors.inkFaint)),
+          Text(
+            '걸어낸 안개',
+            style: AppType.sans(size: 13, color: AppColors.inkFaint),
+          ),
           const SizedBox(height: 2),
-          Text(_areaText(area),
-              style: AppType.serif(size: 40, weight: FontWeight.w800)),
+          Text(
+            _areaText(area),
+            style: AppType.serif(size: 40, weight: FontWeight.w800),
+          ),
           const SizedBox(height: 4),
-          Text(_soccerText(area),
-              style: AppType.sans(size: 13, color: AppColors.inkFaint)),
+          Text(
+            _soccerText(area),
+            style: AppType.sans(size: 13, color: AppColors.inkFaint),
+          ),
           const SizedBox(height: 28),
           _sectionTitle('Records'),
           const SizedBox(height: 12),
           _weeklyCard(weekly),
           const SizedBox(height: 20),
           _statRow('도장', '${collection.unlockedCount}'),
-          _statRow('국가', '1'),
+          _statRow(
+            '국가',
+            '${collection.unlockedCountryCount} / ${collection.countryCount}',
+          ),
           _statRow('총 거리', '${walk.totalDistanceKm.toStringAsFixed(1)} km'),
           _statRow('가장 긴 산책', '${walk.longestWalkKm.toStringAsFixed(1)} km'),
           _statRow('연속 산책', '${walk.streakDays} 일'),
-          _statRow('자주 가는 곳', _favorite(collection, walk)),
+          _statRow('자주 가는 곳', _favorite(collection)),
           const SizedBox(height: 16),
           Center(
             child: TextButton(
@@ -64,14 +75,20 @@ class MyInfoScreen extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('전체 기록 보기',
-                      style: AppType.sans(
-                          size: 14,
-                          weight: FontWeight.w700,
-                          color: AppColors.ink)),
+                  Text(
+                    '전체 기록 보기',
+                    style: AppType.sans(
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
+                  ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right,
-                      size: 18, color: AppColors.ink),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.ink,
+                  ),
                 ],
               ),
             ),
@@ -110,8 +127,10 @@ class MyInfoScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('This Week',
-              style: AppType.sans(size: 13, color: AppColors.inkSoft)),
+          Text(
+            'This Week',
+            style: AppType.sans(size: 13, color: AppColors.inkSoft),
+          ),
           const SizedBox(height: 4),
           Text(
             '+${(w.clearedKm2 * 1e6 / 1000).toStringAsFixed(1)}k m²',
@@ -138,27 +157,41 @@ class MyInfoScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: AppType.sans(size: 14, color: AppColors.inkSoft)),
-          Text(value,
-              style: AppType.sans(
-                  size: 15, weight: FontWeight.w700, color: AppColors.ink)),
+          Text(
+            value,
+            style: AppType.sans(
+              size: 15,
+              weight: FontWeight.w700,
+              color: AppColors.ink,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  String _favorite(CollectionProvider collection, WalkSessionProvider walk) {
+  String _favorite(CollectionProvider collection) {
     // 방문 횟수가 가장 많은 해금 지역
     final unlocked = collection.unlockedRegions;
     if (unlocked.isEmpty) return '-';
     RegionMetaCount? best;
+    DateTime? newestUnlock;
+    String? newestName;
     for (final r in unlocked) {
       final p = collection.progressOf(r.id);
       final count = p?.visitCount ?? 0;
       if (best == null || count > best.count) {
         best = RegionMetaCount(r.nameKo, count);
       }
+      final unlockedAt = p?.unlockedAt;
+      if (unlockedAt != null &&
+          (newestUnlock == null || unlockedAt.isAfter(newestUnlock))) {
+        newestUnlock = unlockedAt;
+        newestName = r.nameKo;
+      }
     }
-    return best?.name ?? '-';
+    if (best != null && best.count > 0) return best.name;
+    return newestName ?? unlocked.first.nameKo;
   }
 
   void _showAllRecords(BuildContext context, WalkSessionProvider walk) {

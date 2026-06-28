@@ -85,18 +85,27 @@ class _MapScreenState extends State<MapScreen> {
     final cell = FogGrid.cellOf(point);
     final regionId = collection.repository.matcher.regionOfCell(cell);
 
-    // 안개 걷기 (새 셀이 생기면 콜백으로 해금/세션 누적)
-    fog.onNewCells = (fresh) {
-      final unlocked = collection.checkUnlocks(fresh);
-      walk.onMove(point, newCellCount: fresh.length, regionId: regionId);
+    final update = fog.onLocation(point, accuracy: accuracy);
+
+    if (!update.accepted) return;
+
+    if (walk.isWalking) {
+      walk.onMove(
+        point,
+        newCellCount: update.freshCells.length,
+        regionId: regionId,
+      );
+    }
+
+    if (update.freshCells.isNotEmpty) {
+      final unlocked = collection.checkUnlocks(update.freshCells);
       if (unlocked.isNotEmpty) {
         context.read<ProfileProvider>().syncProgress(
-              stampCount: collection.unlockedCount,
-            );
+          stampCount: collection.unlockedCount,
+        );
         _showUnlockSnack(unlocked.length);
       }
-    };
-    fog.onLocation(point, accuracy: accuracy);
+    }
 
     if (mounted) {
       setState(() {
@@ -112,8 +121,10 @@ class _MapScreenState extends State<MapScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: AppColors.ink,
-        content: Text('새로운 지역 $count곳 해금!',
-            style: AppType.sans(color: Colors.white, weight: FontWeight.w600)),
+        content: Text(
+          '새로운 지역 $count곳 해금!',
+          style: AppType.sans(color: Colors.white, weight: FontWeight.w600),
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -187,12 +198,7 @@ class _MapScreenState extends State<MapScreen> {
         // 내 위치 발자국 마커
         MarkerLayer(
           markers: [
-            Marker(
-              point: _center,
-              width: 44,
-              height: 44,
-              child: _meMarker(),
-            ),
+            Marker(point: _center, width: 44, height: 44, child: _meMarker()),
           ],
         ),
       ],
@@ -249,15 +255,23 @@ class _MapScreenState extends State<MapScreen> {
           children: [
             const Icon(Icons.map_outlined, size: 18, color: AppColors.ink),
             const SizedBox(width: 7),
-            Text(name,
-                style: AppType.sans(
-                    size: 14, weight: FontWeight.w700, color: AppColors.ink)),
+            Text(
+              name,
+              style: AppType.sans(
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
             const SizedBox(width: 7),
-            Text('${pct.toStringAsFixed(2)}%',
-                style: AppType.sans(
-                    size: 14,
-                    weight: FontWeight.w700,
-                    color: AppColors.stampRed)),
+            Text(
+              '${pct.toStringAsFixed(2)}%',
+              style: AppType.sans(
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.stampRed,
+              ),
+            ),
           ],
         ),
       ),
@@ -314,15 +328,21 @@ class _MapScreenState extends State<MapScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(walking ? Icons.stop : Icons.play_arrow,
-                    color: Colors.white, size: 22),
+                Icon(
+                  walking ? Icons.stop : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 22,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   walking
                       ? '산책 종료 · ${walk.activeDistanceKm.toStringAsFixed(2)}km'
                       : '산책 시작',
                   style: AppType.sans(
-                      size: 15, weight: FontWeight.w700, color: Colors.white),
+                    size: 15,
+                    weight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -400,16 +420,21 @@ class _MapScreenState extends State<MapScreen> {
             const Icon(Icons.location_off, color: Colors.white, size: 20),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(msg,
-                  style: AppType.sans(size: 13, color: Colors.white)),
+              child: Text(
+                msg,
+                style: AppType.sans(size: 13, color: Colors.white),
+              ),
             ),
             TextButton(
               onPressed: onTap,
-              child: Text(action,
-                  style: AppType.sans(
-                      size: 13,
-                      weight: FontWeight.w700,
-                      color: AppColors.holoPink)),
+              child: Text(
+                action,
+                style: AppType.sans(
+                  size: 13,
+                  weight: FontWeight.w700,
+                  color: AppColors.holoPink,
+                ),
+              ),
             ),
           ],
         ),

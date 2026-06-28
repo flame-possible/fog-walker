@@ -29,7 +29,9 @@ class _PassportScreenState extends State<PassportScreen> {
 
     final filtered = _continent == 0
         ? countries
-        : countries.where((c) => c.continent == _continents[_continent]).toList();
+        : countries
+              .where((c) => c.continent == _continents[_continent])
+              .toList();
 
     return SafeArea(
       child: Column(
@@ -37,8 +39,10 @@ class _PassportScreenState extends State<PassportScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Text('Passport',
-                style: AppType.serif(size: 30, weight: FontWeight.w800)),
+            child: Text(
+              'Passport',
+              style: AppType.serif(size: 30, weight: FontWeight.w800),
+            ),
           ),
           _continentTabs(),
           const SizedBox(height: 4),
@@ -94,20 +98,26 @@ class _PassportScreenState extends State<PassportScreen> {
     }
     final widgets = <Widget>[];
     groups.forEach((continent, list) {
-      widgets.add(Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 12),
-        child: Text(continent,
-            style: AppType.serif(size: 20, weight: FontWeight.w700)),
-      ));
-      widgets.add(GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 0.72,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
-        children: list.map(_card).toList(),
-      ));
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 12),
+          child: Text(
+            continent,
+            style: AppType.serif(size: 20, weight: FontWeight.w700),
+          ),
+        ),
+      );
+      widgets.add(
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 0.72,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
+          children: list.map(_card).toList(),
+        ),
+      );
     });
     return widgets;
   }
@@ -115,9 +125,9 @@ class _PassportScreenState extends State<PassportScreen> {
   Widget _card(_Country c) {
     return GestureDetector(
       onTap: c.unlocked
-          ? () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const CityStampsScreen()),
-              )
+          ? () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const CityStampsScreen()))
           : null,
       child: Container(
         decoration: BoxDecoration(
@@ -184,8 +194,15 @@ class _PassportScreenState extends State<PassportScreen> {
   /// 데모용 국가 목록. 한국만 실제 진행도, 나머지는 잠금.
   List<_Country> _countries(int koreaCities, int koreaRegions) {
     return [
-      _Country('Republic of Korea', '대한민국', '아시아',
-          const Color(0xFF2C3E50), true, koreaRegions, 467),
+      _Country(
+        'Republic of Korea',
+        '대한민국',
+        '아시아',
+        const Color(0xFF2C3E50),
+        true,
+        koreaRegions,
+        467,
+      ),
       _Country('Japan', '일본', '아시아', const Color(0xFF7B4B3A), false, 0, 200),
       _Country('Thailand', '태국', '아시아', const Color(0xFF1F6F54), false, 0, 200),
       _Country('France', '프랑스', '유럽', const Color(0xFF34495E), false, 0, 200),
@@ -194,14 +211,29 @@ class _PassportScreenState extends State<PassportScreen> {
       _Country('Malawi', '말라위', '북미', const Color(0xFFB23A2E), false, 0, 200),
       _Country('Nepal', '네팔', '아시아', const Color(0xFF6A3D9A), false, 0, 200),
       _Country('Brazil', '브라질', '남미', const Color(0xFF239B56), false, 0, 200),
-      _Country('Australia', '호주', '오세아니아', const Color(0xFF2874A6), false, 0, 200),
+      _Country(
+        'Australia',
+        '호주',
+        '오세아니아',
+        const Color(0xFF2874A6),
+        false,
+        0,
+        200,
+      ),
     ];
   }
 }
 
 class _Country {
-  const _Country(this.nameEn, this.nameKo, this.continent, this.color,
-      this.unlocked, this.unlockedCount, this.total);
+  const _Country(
+    this.nameEn,
+    this.nameKo,
+    this.continent,
+    this.color,
+    this.unlocked,
+    this.unlockedCount,
+    this.total,
+  );
   final String nameEn;
   final String nameKo;
   final String continent;

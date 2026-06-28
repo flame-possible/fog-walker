@@ -56,17 +56,24 @@ void main() {
     totalOut += simplified.length;
 
     final bbox = _bbox(simplified);
+    final id = props['adm_cd2']?.toString() ?? props['adm_cd'].toString();
+    final districtId = 'seoul-${_slug(romanizeDong(districtKo))}';
 
     regions.add({
-      'id': props['adm_cd2']?.toString() ?? props['adm_cd'].toString(),
+      'id': id,
+      'parentId': districtId,
+      'countryId': 'kr',
       'nameKo': dongKo,
       'nameEn': romanizeDong(dongKo),
+      'localName': dongKo,
       'cityId': 'seoul',
       'districtKo': districtKo,
       'districtEn': romanizeDong(districtKo),
-      'boundary': simplified
-          .map((p) => [_round(p[0]), _round(p[1])])
-          .toList(),
+      'level': 'neighborhood',
+      'kind': 'dong',
+      'dataPackId': 'kr-seoul',
+      'hierarchyPath': ['kr', 'seoul', districtId, id],
+      'boundary': simplified.map((p) => [_round(p[0]), _round(p[1])]).toList(),
       'bbox': bbox.map(_round).toList(),
     });
   }
@@ -86,8 +93,10 @@ void main() {
 
   final sizeKb = (outFile.lengthSync() / 1024).toStringAsFixed(0);
   stdout.writeln('가공 완료: ${regions.length}개 행정동');
-  stdout.writeln('좌표 점: $totalIn → $totalOut '
-      '(${(100 * totalOut / totalIn).toStringAsFixed(0)}%)');
+  stdout.writeln(
+    '좌표 점: $totalIn → $totalOut '
+    '(${(100 * totalOut / totalIn).toStringAsFixed(0)}%)',
+  );
   stdout.writeln('출력: ${outFile.path} ($sizeKb KB)');
   stdout.writeln('예시: ${regions.first['nameKo']} → ${regions.first['nameEn']}');
 }
@@ -101,10 +110,9 @@ List<List<double>> _largestOuterRing(List coordinates) {
     final ring = polygon[0]; // 외곽 ring (구멍은 무시)
     if (ring is! List) continue;
     final pts = ring
-        .map<List<double>>((p) => [
-              (p[0] as num).toDouble(),
-              (p[1] as num).toDouble(),
-            ])
+        .map<List<double>>(
+          (p) => [(p[0] as num).toDouble(), (p[1] as num).toDouble()],
+        )
         .toList();
     if (pts.length > best.length) best = pts;
   }
@@ -136,8 +144,7 @@ List<List<double>> _douglasPeucker(List<List<double>> pts, double epsilon) {
 }
 
 /// 점 p에서 선분 a-b까지의 수직 거리.
-double _perpendicularDistance(
-    List<double> p, List<double> a, List<double> b) {
+double _perpendicularDistance(List<double> p, List<double> a, List<double> b) {
   final dx = b[0] - a[0];
   final dy = b[1] - a[1];
   final mag = math.sqrt(dx * dx + dy * dy);
@@ -165,3 +172,11 @@ List<double> _bbox(List<List<double>> pts) {
 
 /// 좌표 자릿수 축소(6자리 ≈ 0.1m 정밀도)로 용량 절감.
 double _round(double v) => (v * 1e6).round() / 1e6;
+
+String _slug(String value) {
+  final slug = value
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+  return slug.isEmpty ? 'district' : slug;
+}

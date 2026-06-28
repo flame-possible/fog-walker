@@ -49,17 +49,11 @@ void main() {
 
   group('AreaCalculator.clearPercent', () {
     test('방문 셀이 없으면 0%다', () {
-      expect(
-        AreaCalculator.clearPercent(visited: 0, total: 100),
-        0,
-      );
+      expect(AreaCalculator.clearPercent(visited: 0, total: 100), 0);
     });
 
     test('전체 셀을 다 방문하면 100%다', () {
-      expect(
-        AreaCalculator.clearPercent(visited: 100, total: 100),
-        100,
-      );
+      expect(AreaCalculator.clearPercent(visited: 100, total: 100), 100);
     });
 
     test('절반 방문하면 50%다', () {
@@ -70,10 +64,7 @@ void main() {
     });
 
     test('전체 셀이 0이면 0%를 반환한다 (0으로 나누기 방어)', () {
-      expect(
-        AreaCalculator.clearPercent(visited: 0, total: 0),
-        0,
-      );
+      expect(AreaCalculator.clearPercent(visited: 0, total: 0), 0);
     });
   });
 }

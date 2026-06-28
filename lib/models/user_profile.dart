@@ -33,10 +33,10 @@ class UserProfile extends HiveObject {
 
   /// 기본 프로필 (첫 실행 시드).
   factory UserProfile.initial() => UserProfile(
-        name: 'HONG GILDONG',
-        passportId: 'FW-2024-0927',
-        level: 1,
-        tier: 'Newcomer',
-        stampCount: 0,
-      );
+    name: 'HONG GILDONG',
+    passportId: 'FW-2024-0927',
+    level: 1,
+    tier: 'Newcomer',
+    stampCount: 0,
+  );
 }

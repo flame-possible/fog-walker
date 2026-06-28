@@ -39,8 +39,9 @@ class StampWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor =
-        locked ? AppColors.inkFaint.withValues(alpha: 0.35) : color;
+    final effectiveColor = locked
+        ? AppColors.inkFaint.withValues(alpha: 0.35)
+        : color;
     return SizedBox(
       width: size,
       height: size,
@@ -85,11 +86,23 @@ class _StampPainter extends CustomPainter {
     canvas.drawCircle(center, radius - stroke * 3.2, ringPaint);
 
     // 상단 원호 텍스트
-    _drawArcText(canvas, center, radius - stroke * 5.5, topText, size.width,
-        topArc: true);
+    _drawArcText(
+      canvas,
+      center,
+      radius - stroke * 5.5,
+      topText,
+      size.width,
+      topArc: true,
+    );
     // 하단 원호 텍스트
-    _drawArcText(canvas, center, radius - stroke * 5.5, bottomText, size.width,
-        topArc: false);
+    _drawArcText(
+      canvas,
+      center,
+      radius - stroke * 5.5,
+      bottomText,
+      size.width,
+      topArc: false,
+    );
 
     // 중앙 도시 스카이라인
     _drawSkyline(canvas, center, radius, size.width);
@@ -148,8 +161,7 @@ class _StampPainter extends CustomPainter {
       canvas.save();
       canvas.translate(pos.dx, pos.dy);
       // 글자를 호의 접선 방향으로 회전. 하단 호는 뒤집어 정방향 유지.
-      final rotation =
-          topArc ? angle + math.pi / 2 : angle - math.pi / 2;
+      final rotation = topArc ? angle + math.pi / 2 : angle - math.pi / 2;
       canvas.rotate(rotation);
       tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
       canvas.restore();
@@ -178,7 +190,9 @@ class _StampPainter extends CustomPainter {
       final x = left + i * bw;
       // 가운데 건물(타워)을 가장 높게 — 남산타워 느낌
       final isCentral = i == buildings ~/ 2;
-      final base = isCentral ? innerR * 1.05 : innerR * (0.4 + rnd.nextDouble() * 0.5);
+      final base = isCentral
+          ? innerR * 1.05
+          : innerR * (0.4 + rnd.nextDouble() * 0.5);
       final top = baseY - base;
       path.lineTo(x, top);
       path.lineTo(x + bw * 0.78, top);
@@ -191,7 +205,8 @@ class _StampPainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     // 중앙 타워 안테나
-    final towerX = center.dx + bw * 0.39 - (bw * buildings) / 2 + (buildings ~/ 2) * bw;
+    final towerX =
+        center.dx + bw * 0.39 - (bw * buildings) / 2 + (buildings ~/ 2) * bw;
     final antennaPaint = Paint()
       ..color = color
       ..strokeWidth = (w * 0.012).clamp(0.8, 2.5)

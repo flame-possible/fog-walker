@@ -59,21 +59,30 @@ class RegionDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Center(
-            child: Text(meta.nameKo,
-                style: AppType.serif(size: 28, weight: FontWeight.w800)),
+            child: Text(
+              meta.nameKo,
+              style: AppType.serif(size: 28, weight: FontWeight.w800),
+            ),
           ),
           Center(
-            child: Text(meta.nameEn,
-                style: AppType.sans(size: 15, color: AppColors.inkFaint)),
+            child: Text(
+              meta.nameEn,
+              style: AppType.sans(size: 15, color: AppColors.inkFaint),
+            ),
           ),
           const SizedBox(height: 24),
           _statsRow(progress, pct),
           const SizedBox(height: 24),
           _sectionTitle('About'),
           const SizedBox(height: 8),
-          Text(meta.about,
-              style: AppType.sans(
-                  size: 14, color: AppColors.inkSoft, height: 1.55)),
+          Text(
+            meta.about,
+            style: AppType.sans(
+              size: 14,
+              color: AppColors.inkSoft,
+              height: 1.55,
+            ),
+          ),
           const SizedBox(height: 24),
           _sectionTitle('Location'),
           const SizedBox(height: 8),
@@ -84,8 +93,10 @@ class RegionDetailScreen extends StatelessWidget {
           if (visits.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text('아직 이 지역의 산책 기록이 없어요.',
-                  style: AppType.sans(size: 13, color: AppColors.inkFaint)),
+              child: Text(
+                '아직 이 지역의 산책 기록이 없어요.',
+                style: AppType.sans(size: 13, color: AppColors.inkFaint),
+              ),
             )
           else
             ...visits.map(_visitRow),
@@ -95,8 +106,7 @@ class RegionDetailScreen extends StatelessWidget {
   }
 
   Widget _statsRow(RegionProgress? progress, double pct) {
-    final unlockText =
-        progress != null ? _fmtDate(progress.unlockedAt) : '미해금';
+    final unlockText = progress != null ? _fmtDate(progress.unlockedAt) : '미해금';
     final visitText = progress != null ? '${progress.visitCount}회' : '0회';
     return Row(
       children: [
@@ -114,23 +124,25 @@ class RegionDetailScreen extends StatelessWidget {
       children: [
         Text(label, style: AppType.sans(size: 12, color: AppColors.inkFaint)),
         const SizedBox(height: 6),
-        Text(value,
-            style: AppType.sans(
-                size: 16, weight: FontWeight.w700, color: AppColors.ink)),
+        Text(
+          value,
+          style: AppType.sans(
+            size: 16,
+            weight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _divider() =>
-      Container(width: 1, height: 32, color: AppColors.line);
+  Widget _divider() => Container(width: 1, height: 32, color: AppColors.line);
 
   Widget _sectionTitle(String t) =>
       Text(t, style: AppType.serif(size: 20, weight: FontWeight.w700));
 
   Widget _miniMap(RegionMeta meta, FogProvider fog) {
-    final pts = meta.shape.boundary
-        .map((p) => LatLng(p[1], p[0]))
-        .toList();
+    final pts = meta.shape.boundary.map((p) => LatLng(p[1], p[0])).toList();
     final center = LatLng(
       (meta.shape.minLat + meta.shape.maxLat) / 2,
       (meta.shape.minLng + meta.shape.maxLng) / 2,
@@ -144,8 +156,9 @@ class RegionDetailScreen extends StatelessWidget {
           options: MapOptions(
             initialCenter: center,
             initialZoom: 14,
-            interactionOptions:
-                const InteractionOptions(flags: InteractiveFlag.none),
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
           ),
           children: [
             TileLayer(
@@ -174,9 +187,14 @@ class RegionDetailScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(_fmtDate(session.startedAt),
-              style: AppType.sans(
-                  size: 14, weight: FontWeight.w600, color: AppColors.ink)),
+          Text(
+            _fmtDate(session.startedAt),
+            style: AppType.sans(
+              size: 14,
+              weight: FontWeight.w600,
+              color: AppColors.ink,
+            ),
+          ),
           Text(
             '${session.distanceKm.toStringAsFixed(1)}km · '
             '${session.duration.inMinutes}분',

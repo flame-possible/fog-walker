@@ -25,8 +25,7 @@ void main() {
   });
 
   group('ProfileProvider.syncProgress', () {
-    test('박스에 프로필이 없어도 에러 없이 저장된다 (회귀: HiveError not in a box)',
-        () {
+    test('박스에 프로필이 없어도 에러 없이 저장된다 (회귀: HiveError not in a box)', () {
       // 빈 박스로 시작 → initial 프로필 사용
       final provider = ProfileProvider(box: box);
       // 이전 버그: initial 객체에 .save() 호출 시 HiveError 발생

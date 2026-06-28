@@ -67,6 +67,12 @@ curl -sL "https://raw.githubusercontent.com/raqoon886/Local_HangJeongDong/master
 dart run tool/build_seoul_geojson.dart
 ```
 
+## 확장 방향
+
+현재 앱은 서울 데이터를 기본 번들로 포함한다. 전세계 확장은 앱 설치 파일에 모든
+경계를 넣는 방식이 아니라, 국가/지역/도시 단위 데이터팩을 선택 다운로드해 로컬에
+캐시하는 방식으로 설계한다.
+
 ## 기술 스택
 
 flutter_map (OSM) · geolocator · hive · provider · latlong2 · google_fonts

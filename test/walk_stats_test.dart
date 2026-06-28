@@ -44,8 +44,14 @@ void main() {
         _session(day: DateTime(2026, 6, 2), distanceKm: 5, mode: WalkMode.bike),
         _session(day: DateTime(2026, 6, 3), distanceKm: 1, mode: WalkMode.walk),
       ];
-      expect(WalkStats.distanceByMode(sessions, WalkMode.walk), closeTo(3, 1e-9));
-      expect(WalkStats.distanceByMode(sessions, WalkMode.bike), closeTo(5, 1e-9));
+      expect(
+        WalkStats.distanceByMode(sessions, WalkMode.walk),
+        closeTo(3, 1e-9),
+      );
+      expect(
+        WalkStats.distanceByMode(sessions, WalkMode.bike),
+        closeTo(5, 1e-9),
+      );
       expect(WalkStats.distanceByMode(sessions, WalkMode.swim), 0);
     });
   });
@@ -113,9 +119,24 @@ void main() {
     test('이번 주(최근 7일) 세션만 집계한다', () {
       final today = DateTime(2026, 6, 13);
       final sessions = [
-        _session(day: DateTime(2026, 6, 13), distanceKm: 2, clearedKm2: 0.3, newCells: 1),
-        _session(day: DateTime(2026, 6, 10), distanceKm: 3, clearedKm2: 0.4, newCells: 2),
-        _session(day: DateTime(2026, 6, 1), distanceKm: 9, clearedKm2: 9, newCells: 9), // 주 밖
+        _session(
+          day: DateTime(2026, 6, 13),
+          distanceKm: 2,
+          clearedKm2: 0.3,
+          newCells: 1,
+        ),
+        _session(
+          day: DateTime(2026, 6, 10),
+          distanceKm: 3,
+          clearedKm2: 0.4,
+          newCells: 2,
+        ),
+        _session(
+          day: DateTime(2026, 6, 1),
+          distanceKm: 9,
+          clearedKm2: 9,
+          newCells: 9,
+        ), // 주 밖
       ];
       final w = WalkStats.weekly(sessions, today: today);
       expect(w.sessionCount, 2);

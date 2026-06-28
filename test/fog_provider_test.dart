@@ -12,7 +12,10 @@ void main() {
       fog.onLocation(const LatLng(37.5400, 127.0050), accuracy: 10);
 
       expect(fog.visitedCells, isNotEmpty);
-      expect(fog.visitedCells, contains(FogGrid.cellOf(const LatLng(37.5400, 127.0050))));
+      expect(
+        fog.visitedCells,
+        contains(FogGrid.cellOf(const LatLng(37.5400, 127.0050))),
+      );
     });
 
     test('새 셀이 추가되면 리스너에게 알린다', () {
@@ -58,6 +61,34 @@ void main() {
 
       expect(received, isNotNull);
       expect(received, isNotEmpty);
+    });
+
+    test('onLocation은 이번 위치에서 새로 추가된 셀만 반환한다', () {
+      final fog = FogProvider();
+      final first = fog.onLocation(
+        const LatLng(37.5400, 127.0050),
+        accuracy: 10,
+      );
+      final second = fog.onLocation(
+        const LatLng(37.5400, 127.0050),
+        accuracy: 10,
+      );
+
+      expect(first.accepted, isTrue);
+      expect(first.freshCells, isNotEmpty);
+      expect(second.accepted, isTrue);
+      expect(second.freshCells, isEmpty);
+    });
+
+    test('onLocation은 무시된 GPS 신호를 accepted=false로 표시한다', () {
+      final fog = FogProvider();
+      final update = fog.onLocation(
+        const LatLng(37.5400, 127.0050),
+        accuracy: 80,
+      );
+
+      expect(update.accepted, isFalse);
+      expect(update.freshCells, isEmpty);
     });
   });
 

@@ -42,20 +42,28 @@ class CityStampsScreen extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
-              child: Text('South Korea',
-                  style: AppType.serif(size: 30, weight: FontWeight.w800)),
+              child: Text(
+                'South Korea',
+                style: AppType.serif(size: 30, weight: FontWeight.w800),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Text('All Cities',
-                      style: AppType.sans(
-                          size: 14,
-                          weight: FontWeight.w600,
-                          color: AppColors.inkSoft)),
-                  const Icon(Icons.keyboard_arrow_down,
-                      size: 20, color: AppColors.inkSoft),
+                  Text(
+                    'All Cities',
+                    style: AppType.sans(
+                      size: 14,
+                      weight: FontWeight.w600,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: AppColors.inkSoft,
+                  ),
                 ],
               ),
             ),
@@ -95,31 +103,33 @@ class CityStampsScreen extends StatelessWidget {
           final left = col * cellW + (cellW - size) / 2 + jitterX;
           final top = row * cellH + (cellH - size) / 2 + jitterY;
 
-          children.add(Positioned(
-            left: left.clamp(0, w - size),
-            top: top.clamp(0, h - size),
-            child: Transform.rotate(
-              angle: rot,
-              child: GestureDetector(
-                onTap: s.meta == null
-                    ? null
-                    : () => Navigator.of(context).push(
+          children.add(
+            Positioned(
+              left: left.clamp(0, w - size),
+              top: top.clamp(0, h - size),
+              child: Transform.rotate(
+                angle: rot,
+                child: GestureDetector(
+                  onTap: s.meta == null
+                      ? null
+                      : () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) =>
                                 RegionDetailScreen(regionId: s.meta!.id),
                           ),
                         ),
-                child: StampWidget(
-                  size: size,
-                  topText: s.topText,
-                  bottomText: s.bottomText,
-                  color: s.color,
-                  locked: s.locked,
-                  seed: i,
+                  child: StampWidget(
+                    size: size,
+                    topText: s.topText,
+                    bottomText: s.bottomText,
+                    color: s.color,
+                    locked: s.locked,
+                    seed: i,
+                  ),
                 ),
               ),
             ),
-          ));
+          );
         }
         return Stack(children: children);
       },
@@ -149,20 +159,24 @@ class CityStampsScreen extends StatelessWidget {
     final result = <_StampData>[];
 
     // 항상 보이는 시그니처 도장 2개 (한강, 서울)
-    result.add(_StampData(
-      topText: 'HANGANG',
-      bottomText: '한강',
-      color: AppColors.stampPalette[1],
-      locked: false,
-      meta: null,
-    ));
-    result.add(_StampData(
-      topText: 'SEOUL',
-      bottomText: '서울특별시',
-      color: AppColors.stampPalette[0],
-      locked: false,
-      meta: null,
-    ));
+    result.add(
+      _StampData(
+        topText: 'HANGANG',
+        bottomText: '한강',
+        color: AppColors.stampPalette[1],
+        locked: false,
+        meta: null,
+      ),
+    );
+    result.add(
+      _StampData(
+        topText: 'SEOUL',
+        bottomText: '서울특별시',
+        color: AppColors.stampPalette[0],
+        locked: false,
+        meta: null,
+      ),
+    );
 
     // 해금된 지역 도장
     final unlocked = collection.unlockedRegions;

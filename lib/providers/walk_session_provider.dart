@@ -111,8 +111,7 @@ class WalkSessionProvider extends ChangeNotifier {
   double get longestWalkKm => WalkStats.longestWalkKm(sessions);
   int get streakDays =>
       WalkStats.currentStreakDays(sessions, today: DateTime.now());
-  WeeklySummary get weekly =>
-      WalkStats.weekly(sessions, today: DateTime.now());
+  WeeklySummary get weekly => WalkStats.weekly(sessions, today: DateTime.now());
   double distanceByMode(WalkMode m) => WalkStats.distanceByMode(sessions, m);
 
   /// 특정 지역을 지난 세션들 (지역 상세 Visits).

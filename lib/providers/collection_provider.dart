@@ -15,8 +15,8 @@ class CollectionProvider extends ChangeNotifier {
   CollectionProvider({
     required RegionRepository repository,
     Box<RegionProgress>? progressBox,
-  })  : _repo = repository,
-        _progressBox = progressBox;
+  }) : _repo = repository,
+       _progressBox = progressBox;
 
   final RegionRepository _repo;
   final Box<RegionProgress>? _progressBox;
@@ -27,12 +27,26 @@ class CollectionProvider extends ChangeNotifier {
 
   RegionProgress? progressOf(String regionId) => _progressBox?.get(regionId);
 
-  bool isUnlocked(String regionId) => _progressBox?.containsKey(regionId) ?? false;
+  bool isUnlocked(String regionId) =>
+      _progressBox?.containsKey(regionId) ?? false;
 
   List<RegionMeta> get unlockedRegions =>
       _repo.regions.where((r) => isUnlocked(r.id)).toList();
 
   int get unlockedCount => unlockedRegions.length;
+  int get countryCount {
+    final countries = _repo.regions
+        .map((r) => r.countryId)
+        .where((id) => id.isNotEmpty);
+    return countries.toSet().length;
+  }
+
+  int get unlockedCountryCount {
+    final countries = unlockedRegions
+        .map((r) => r.countryId)
+        .where((id) => id.isNotEmpty);
+    return countries.toSet().length;
+  }
 
   /// 방문 셀 집합으로 새 지역 해금을 판정한다. 새로 해금된 지역 id 목록 반환.
   List<String> checkUnlocks(Set<(int, int)> visited) {

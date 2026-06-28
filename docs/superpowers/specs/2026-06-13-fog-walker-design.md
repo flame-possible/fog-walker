@@ -200,12 +200,12 @@ class UserProfile {
 
 ```
 BottomNavigationBar (4 tabs)
-├─ Tab 1: 🗺️  MapScreen          [Frame 277]  안개 지도 + GPS + 발자국 마커
+├─ Tab 1: 🗺️  MapScreen           [Frame 277]  안개 지도 + GPS + 발자국 마커
 ├─ Tab 2: 📷  PassportScreen      [Frame 220]  국가별 여권 컬렉션 그리드
 │              └─ CityStampsScreen [Frame 279]  국가 → 도시 도장들
-│                   └─ RegionDetailScreen [Frame 262]  도장 → 동네 상세
-├─ Tab 3: 🎖️  AchievementScreen   [Frame 281]  업적 진행도 리스트
-└─ Tab 4: ⚙️  MyInfoScreen        [Frame 221]  여권 프로필 + 통계 + 기록
+│                   └─ RegionDetailScreen [Frame 221]  도장 → 동네 상세
+├─ Tab 3: 🎖️  AchievementScreen   [Frame 262]  업적 진행도 리스트
+└─ Tab 4: ⚙️  MyInfoScreen        [Frame 281]  여권 프로필 + 통계 + 기록
 ```
 
 > 4번째 탭 아이콘은 톱니처럼 보이나 내용은 "My Information". 별도 설정 화면은 MVP 제외 (YAGNI).

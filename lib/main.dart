@@ -122,11 +122,12 @@ class _SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.travel_explore,
-                size: 64, color: AppColors.stampRed),
+            Icon(Icons.travel_explore, size: 64, color: AppColors.stampRed),
             const SizedBox(height: 16),
-            Text('Fog Walker',
-                style: AppType.serif(size: 28, weight: FontWeight.w800)),
+            Text(
+              'Fog Walker',
+              style: AppType.serif(size: 28, weight: FontWeight.w800),
+            ),
             const SizedBox(height: 24),
             const SizedBox(
               width: 24,
@@ -154,9 +155,11 @@ class _ErrorScreen extends StatelessWidget {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('초기화 중 문제가 발생했어요:\n$error',
-              textAlign: TextAlign.center,
-              style: AppType.sans(size: 14, color: AppColors.inkSoft)),
+          child: Text(
+            '초기화 중 문제가 발생했어요:\n$error',
+            textAlign: TextAlign.center,
+            style: AppType.sans(size: 14, color: AppColors.inkSoft),
+          ),
         ),
       ),
     );

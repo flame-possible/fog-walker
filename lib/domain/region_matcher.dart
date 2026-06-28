@@ -10,8 +10,8 @@ import 'region_shape.dart';
 /// (클리어 % 분모) 한 번 계산해 캐시한다.
 class RegionMatcher {
   RegionMatcher(List<RegionShape> regions)
-      : _regions = regions,
-        _byId = {for (final r in regions) r.id: r};
+    : _regions = regions,
+      _byId = {for (final r in regions) r.id: r};
 
   final List<RegionShape> _regions;
   final Map<String, RegionShape> _byId;

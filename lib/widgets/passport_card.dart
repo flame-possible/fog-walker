@@ -32,15 +32,17 @@ class PassportCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('PASSPORT', style: AppType.label(color: AppColors.inkSoft)),
-              Text('REPUBLIC OF KOREA',
-                  style: AppType.label(color: AppColors.inkSoft)),
+              Text(
+                'REPUBLIC OF KOREA',
+                style: AppType.label(color: AppColors.inkSoft),
+              ),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _photo(),
+              _photo(profile),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -72,14 +74,25 @@ class PassportCard extends StatelessWidget {
       children: [
         Text(label, style: AppType.label(color: AppColors.inkFaint)),
         const SizedBox(height: 2),
-        Text(value,
-            style: AppType.sans(
-                size: 15, weight: FontWeight.w700, color: AppColors.ink)),
+        Text(
+          value,
+          style: AppType.sans(
+            size: 15,
+            weight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _photo() {
+  Widget _photo(UserProfile profile) {
+    final initials = profile.name
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part.characters.first)
+        .join();
     return Container(
       width: 84,
       height: 104,
@@ -88,7 +101,42 @@ class PassportCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
       ),
-      child: Icon(Icons.person, size: 56, color: AppColors.inkFaint.withValues(alpha: 0.7)),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: 18,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.ink.withValues(alpha: 0.82),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 14,
+            child: Container(
+              width: 62,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.ink.withValues(alpha: 0.82),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 10,
+            child: Text(
+              initials.isEmpty ? 'FW' : initials,
+              style: AppType.label(color: Colors.white, size: 10),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -5,11 +5,7 @@ import 'package:latlong2/latlong.dart';
 /// 도메인 순수 타입이라 Hive/위젯에 의존하지 않는다. 점 포함 판정과
 /// 빠른 1차 필터(bbox)를 제공한다. 좌표는 모두 [경도, 위도] 순서.
 class RegionShape {
-  RegionShape({
-    required this.id,
-    required this.boundary,
-    required this.bbox,
-  });
+  RegionShape({required this.id, required this.boundary, required this.bbox});
 
   final String id;
 
@@ -45,8 +41,8 @@ class RegionShape {
     for (int i = 0, j = n - 1; i < n; j = i++) {
       final xi = boundary[i][0], yi = boundary[i][1];
       final xj = boundary[j][0], yj = boundary[j][1];
-      final intersect = ((yi > y) != (yj > y)) &&
-          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      final intersect =
+          ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
       if (intersect) inside = !inside;
     }
     return inside;

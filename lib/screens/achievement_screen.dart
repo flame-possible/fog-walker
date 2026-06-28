@@ -42,8 +42,10 @@ class _AchievementScreenState extends State<AchievementScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Text('Achievement',
-                style: AppType.serif(size: 30, weight: FontWeight.w800)),
+            child: Text(
+              'Achievement',
+              style: AppType.serif(size: 30, weight: FontWeight.w800),
+            ),
           ),
           _tabBar(),
           const Divider(height: 1),
@@ -72,12 +74,14 @@ class _AchievementScreenState extends State<AchievementScreen> {
               onTap: () => setState(() => _tab = i),
               child: Column(
                 children: [
-                  Text(_tabs[i],
-                      style: AppType.sans(
-                        size: 15,
-                        weight: selected ? FontWeight.w700 : FontWeight.w400,
-                        color: selected ? AppColors.ink : AppColors.inkFaint,
-                      )),
+                  Text(
+                    _tabs[i],
+                    style: AppType.sans(
+                      size: 15,
+                      weight: selected ? FontWeight.w700 : FontWeight.w400,
+                      color: selected ? AppColors.ink : AppColors.inkFaint,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   if (selected)
                     Container(width: 20, height: 2, color: AppColors.ink),
@@ -93,8 +97,9 @@ class _AchievementScreenState extends State<AchievementScreen> {
   Widget _card(Achievement a, UserStats stats) {
     final progress = a.progress(stats);
     final shown = (progress * 100).round();
-    final color =
-        a.metric.toString().contains('bike') ? AppColors.stampPalette[1] : AppColors.stampRed;
+    final color = a.metric.toString().contains('bike')
+        ? AppColors.stampPalette[1]
+        : AppColors.stampRed;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -115,15 +120,19 @@ class _AchievementScreenState extends State<AchievementScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(a.titleKo,
-                    style: AppType.sans(
-                        size: 15,
-                        weight: FontWeight.w700,
-                        color: AppColors.ink)),
+                Text(
+                  a.titleKo,
+                  style: AppType.sans(
+                    size: 15,
+                    weight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(a.descKo,
-                    style:
-                        AppType.sans(size: 12, color: AppColors.inkFaint)),
+                Text(
+                  a.descKo,
+                  style: AppType.sans(size: 12, color: AppColors.inkFaint),
+                ),
                 const SizedBox(height: 10),
                 ThinProgressBar(value: progress, color: color),
               ],
@@ -132,11 +141,14 @@ class _AchievementScreenState extends State<AchievementScreen> {
           const SizedBox(width: 12),
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text('$shown/100',
-                style: AppType.sans(
-                    size: 14,
-                    weight: FontWeight.w700,
-                    color: AppColors.ink)),
+            child: Text(
+              '$shown/100',
+              style: AppType.sans(
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
           ),
         ],
       ),

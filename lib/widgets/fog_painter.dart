@@ -13,10 +13,7 @@ import '../theme/app_colors.dart';
 /// [BlendMode.clear]로 부드러운 원을 뚫는다. 줌에 따라 원 반경을 스케일해
 /// 실제 50m 셀 크기에 맞춘다.
 class FogPainter extends CustomPainter {
-  FogPainter({
-    required this.camera,
-    required this.visitedCells,
-  });
+  FogPainter({required this.camera, required this.visitedCells});
 
   final MapCamera camera;
   final Set<(int, int)> visitedCells;

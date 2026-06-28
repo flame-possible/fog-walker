@@ -5,6 +5,16 @@ import '../data/fog_repository.dart';
 import '../domain/area_calculator.dart';
 import '../domain/fog_grid.dart';
 
+/// 한 위치 이벤트를 안개 엔진에 적용한 결과.
+class FogUpdate {
+  const FogUpdate({required this.accepted, required this.freshCells});
+
+  final bool accepted;
+  final Set<(int, int)> freshCells;
+
+  static const ignored = FogUpdate(accepted: false, freshCells: <(int, int)>{});
+}
+
 /// 안개의 단일 진실 공급원.
 ///
 /// 위치를 받아 주변 셀을 "걷어내고"(visitedCells에 추가), 면적을 파생한다.
@@ -44,15 +54,15 @@ class FogProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 새 위치 처리. 노이즈를 거른 뒤 주변 셀을 걷어낸다.
-  void onLocation(LatLng point, {required double accuracy}) {
+  /// 새 위치 처리. 노이즈를 거른 뒤 주변 셀을 걷어내고 처리 결과를 반환한다.
+  FogUpdate onLocation(LatLng point, {required double accuracy}) {
     // 1) 정확도 필터
-    if (accuracy > maxAccuracyMeters) return;
+    if (accuracy > maxAccuracyMeters) return FogUpdate.ignored;
 
     // 2) 순간이동 필터
     final last = _lastPoint;
     if (last != null && _distance(last, point) > teleportThresholdMeters) {
-      return;
+      return FogUpdate.ignored;
     }
     _lastPoint = point;
 
@@ -62,17 +72,19 @@ class FogProvider extends ChangeNotifier {
     for (final c in candidate) {
       if (_visited.add(c)) fresh.add(c);
     }
-    if (fresh.isEmpty) return;
+    if (fresh.isEmpty) {
+      return FogUpdate(accepted: true, freshCells: fresh);
+    }
 
     // 4) 영속화(debounce) + 콜백 + 알림
     _repo?.markVisited(fresh, DateTime.now().millisecondsSinceEpoch);
     onNewCells?.call(fresh);
     notifyListeners();
+    return FogUpdate(accepted: true, freshCells: fresh);
   }
 
   /// 총 걷어낸 면적(km²). 서울 기준 위도로 셀 면적 보정.
-  double get totalAreaKm2 =>
-      AreaCalculator.totalAreaKm2(_visited, _refLat);
+  double get totalAreaKm2 => AreaCalculator.totalAreaKm2(_visited, _refLat);
 
   /// 면적 보정 기준 위도. 방문 셀이 있으면 첫 셀 중심 위도, 없으면 서울.
   double get _refLat {
@@ -84,9 +96,8 @@ class FogProvider extends ChangeNotifier {
   double clearPercentOf({
     required int visitedInRegion,
     required int totalInRegion,
-  }) =>
-      AreaCalculator.clearPercent(
-        visited: visitedInRegion,
-        total: totalInRegion,
-      );
+  }) => AreaCalculator.clearPercent(
+    visited: visitedInRegion,
+    total: totalInRegion,
+  );
 }
