@@ -53,6 +53,26 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void mergeRemoteProfile(UserProfile remote, AuthAccount account) {
+    final localStampCount = _profile.stampCount;
+    _profile = UserProfile(
+      name: remote.name,
+      passportId: remote.passportId,
+      level: remote.level,
+      tier: remote.tier,
+      stampCount: remote.stampCount > localStampCount
+          ? remote.stampCount
+          : localStampCount,
+      authProvider: AuthProviderType.supabaseGoogle,
+      supabaseUserId: account.id,
+      email: account.email ?? remote.email,
+      displayName: account.displayName ?? remote.displayName,
+      photoUrl: account.photoUrl ?? remote.photoUrl,
+    );
+    _box?.put(_key, _profile);
+    notifyListeners();
+  }
+
   static String _tierFor(int level) {
     if (level >= 20) return 'Legend';
     if (level >= 12) return 'Wanderer';

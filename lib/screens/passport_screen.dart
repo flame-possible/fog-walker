@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/passport_filter.dart';
 import '../providers/collection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -18,8 +19,23 @@ class PassportScreen extends StatefulWidget {
 }
 
 class _PassportScreenState extends State<PassportScreen> {
+  late final TextEditingController _searchController;
   int _continent = 0;
+  PassportUnlockFilter _unlock = PassportUnlockFilter.all;
+  String _query = '';
   static const _continents = ['전체', '아시아', '유럽', '북미', '남미', '오세아니아'];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +48,10 @@ class _PassportScreenState extends State<PassportScreen> {
         : countries
               .where((c) => c.continent == _continents[_continent])
               .toList();
+    final searched = PassportFilter(
+      unlock: _unlock,
+      query: _query,
+    ).apply(filtered, itemOf: _countryFilterItem);
 
     return SafeArea(
       child: Column(
@@ -44,15 +64,60 @@ class _PassportScreenState extends State<PassportScreen> {
               style: AppType.serif(size: 30, weight: FontWeight.w800),
             ),
           ),
+          _searchField(),
           _continentTabs(),
+          _unlockChips(),
           const SizedBox(height: 4),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              children: _byContinent(filtered),
-            ),
+            child: searched.isEmpty
+                ? _empty()
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    children: _byContinent(searched),
+                  ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _searchField() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() => _query = value),
+        style: AppType.sans(size: 14, color: AppColors.ink),
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: '여권 검색',
+          hintStyle: AppType.sans(size: 14, color: AppColors.inkFaint),
+          prefixIcon: const Icon(Icons.search, size: 20),
+          suffixIcon: _query.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: '검색 지우기',
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _query = '');
+                  },
+                ),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.72),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.line),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.line),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.ink),
+          ),
+        ),
       ),
     );
   }
@@ -91,6 +156,44 @@ class _PassportScreenState extends State<PassportScreen> {
     );
   }
 
+  Widget _unlockChips() {
+    const filters = [
+      (PassportUnlockFilter.all, '전체'),
+      (PassportUnlockFilter.unlocked, '획득'),
+      (PassportUnlockFilter.locked, '미획득'),
+    ];
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+        itemCount: filters.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final item = filters[index];
+          final selected = item.$1 == _unlock;
+          return ChoiceChip(
+            label: Text(item.$2),
+            selected: selected,
+            onSelected: (_) => setState(() => _unlock = item.$1),
+            labelStyle: AppType.sans(
+              size: 12,
+              weight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? Colors.white : AppColors.inkSoft,
+            ),
+            selectedColor: AppColors.ink,
+            backgroundColor: Colors.white.withValues(alpha: 0.72),
+            side: BorderSide(color: selected ? AppColors.ink : AppColors.line),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            visualDensity: VisualDensity.compact,
+          );
+        },
+      ),
+    );
+  }
+
   List<Widget> _byContinent(List<_Country> countries) {
     final groups = <String, List<_Country>>{};
     for (final c in countries) {
@@ -120,6 +223,15 @@ class _PassportScreenState extends State<PassportScreen> {
       );
     });
     return widgets;
+  }
+
+  Widget _empty() {
+    return Center(
+      child: Text(
+        '일치하는 여권이 없어요',
+        style: AppType.sans(size: 14, color: AppColors.inkFaint),
+      ),
+    );
   }
 
   Widget _card(_Country c) {
@@ -221,6 +333,14 @@ class _PassportScreenState extends State<PassportScreen> {
         200,
       ),
     ];
+  }
+
+  PassportFilterItem _countryFilterItem(_Country c) {
+    return PassportFilterItem(
+      id: c.nameEn,
+      searchableText: '${c.nameEn} ${c.nameKo} ${c.continent}',
+      unlocked: c.unlocked,
+    );
   }
 }
 

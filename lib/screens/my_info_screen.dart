@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../domain/walk_stats.dart';
 import '../providers/auth_provider.dart';
+import '../providers/cloud_sync_provider.dart';
 import '../providers/collection_provider.dart';
 import '../providers/fog_provider.dart';
 import '../providers/profile_provider.dart';
@@ -25,6 +26,7 @@ class MyInfoScreen extends StatelessWidget {
     final walk = context.watch<WalkSessionProvider>();
     final collection = context.watch<CollectionProvider>();
     final auth = context.watch<AuthProvider>();
+    final sync = context.watch<CloudSyncProvider>();
 
     final area = fog.totalAreaKm2;
     final weekly = walk.weekly;
@@ -40,7 +42,7 @@ class MyInfoScreen extends StatelessWidget {
           const SizedBox(height: 18),
           PassportCard(profile: profile),
           const SizedBox(height: 12),
-          _accountSection(context, auth, context.read<ProfileProvider>()),
+          _accountSection(context, auth, sync, context.read<ProfileProvider>()),
           const SizedBox(height: 28),
           _sectionTitle('Stats'),
           const SizedBox(height: 10),
@@ -108,6 +110,7 @@ class MyInfoScreen extends StatelessWidget {
   Widget _accountSection(
     BuildContext context,
     AuthProvider auth,
+    CloudSyncProvider sync,
     ProfileProvider profileProvider,
   ) {
     final account = auth.account;
@@ -122,7 +125,9 @@ class MyInfoScreen extends StatelessWidget {
     if (account != null) {
       return _accountBox(
         title: account.displayName ?? 'Google 계정',
-        subtitle: account.email ?? '로그인됨',
+        subtitle: sync.isSyncing
+            ? '동기화 중'
+            : sync.errorMessage ?? account.email ?? '로그인됨',
         child: TextButton.icon(
           onPressed: auth.isLoading
               ? null
@@ -140,12 +145,13 @@ class MyInfoScreen extends StatelessWidget {
       title: 'Google 계정 연결',
       subtitle: auth.errorMessage ?? '웹과 모바일에서 같은 프로필을 사용할 수 있어요.',
       child: FilledButton.icon(
-        onPressed: auth.isLoading
+        onPressed: auth.isLoading || sync.isSyncing
             ? null
             : () async {
                 final account = await auth.signInWithGoogle();
                 if (account != null && context.mounted) {
                   profileProvider.syncAccount(account);
+                  await context.read<CloudSyncProvider>().sync(account);
                 }
               },
         icon: const Icon(Icons.login, size: 18),

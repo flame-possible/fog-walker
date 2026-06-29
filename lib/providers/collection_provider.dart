@@ -33,6 +33,9 @@ class CollectionProvider extends ChangeNotifier {
   List<RegionMeta> get unlockedRegions =>
       _repo.regions.where((r) => isUnlocked(r.id)).toList();
 
+  List<RegionProgress> get progressRecords =>
+      _progressBox?.values.toList(growable: false) ?? const [];
+
   int get unlockedCount => unlockedRegions.length;
   int get countryCount {
     final countries = _repo.regions
@@ -91,6 +94,40 @@ class CollectionProvider extends ChangeNotifier {
     }
   }
 
+  /// 서버에서 내려받은 지역 진행 상태를 로컬에 병합한다.
+  Future<int> mergeProgress(Iterable<RegionProgress> remote) async {
+    final box = _progressBox;
+    if (box == null) return 0;
+    var changed = 0;
+    for (final incoming in remote) {
+      final local = box.get(incoming.regionId);
+      if (local == null) {
+        await box.put(incoming.regionId, incoming);
+        changed++;
+        continue;
+      }
+      final unlockedAt = incoming.unlockedAt.isBefore(local.unlockedAt)
+          ? incoming.unlockedAt
+          : local.unlockedAt;
+      final visitCount = incoming.visitCount > local.visitCount
+          ? incoming.visitCount
+          : local.visitCount;
+      if (unlockedAt != local.unlockedAt || visitCount != local.visitCount) {
+        await box.put(
+          incoming.regionId,
+          RegionProgress(
+            regionId: incoming.regionId,
+            unlockedAt: unlockedAt,
+            visitCount: visitCount,
+          ),
+        );
+        changed++;
+      }
+    }
+    if (changed > 0) notifyListeners();
+    return changed;
+  }
+
   // --- 업적 ---
 
   /// 앱의 업적 카탈로그 (스크린샷 기준).
@@ -117,25 +154,11 @@ class CollectionProvider extends ChangeNotifier {
       goal: 1000,
     ),
     Achievement(
-      id: 'bike_explorer',
-      titleKo: '자전거 탐험가',
-      descKo: '누적 500km를 자전거로 달려보세요',
-      metric: AchievementMetric.bikeDistanceKm,
-      goal: 500,
-    ),
-    Achievement(
-      id: 'swim_challenger',
-      titleKo: '수영 챌린저',
-      descKo: '누적 200km를 수영해보세요',
-      metric: AchievementMetric.swimDistanceKm,
-      goal: 200,
-    ),
-    Achievement(
-      id: 'hike_master',
-      titleKo: '하이킹 마스터',
-      descKo: '누적 300km를 하이킹해보세요',
-      metric: AchievementMetric.hikeDistanceKm,
-      goal: 300,
+      id: 'fog_lifter',
+      titleKo: '안개 개척자',
+      descKo: '안개 1km²를 걸어서 걷어내세요',
+      metric: AchievementMetric.totalClearedKm2,
+      goal: 1,
     ),
   ];
 }

@@ -117,4 +117,20 @@ class WalkSessionProvider extends ChangeNotifier {
   /// 특정 지역을 지난 세션들 (지역 상세 Visits).
   List<WalkSession> sessionsInRegion(String regionId) =>
       sessions.where((s) => s.regionIds.contains(regionId)).toList();
+
+  /// 서버에서 내려받은 산책 세션을 로컬에 병합한다.
+  Future<int> mergeSessions(Iterable<WalkSession> remote) async {
+    final b = _box;
+    if (b == null) return 0;
+    final localIds = b.values.map((session) => session.id).toSet();
+    var added = 0;
+    for (final session in remote) {
+      if (localIds.add(session.id)) {
+        await b.add(session);
+        added++;
+      }
+    }
+    if (added > 0) notifyListeners();
+    return added;
+  }
 }

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/achievement.dart';
-import '../models/walk_session.dart';
+import '../domain/achievement_filter.dart';
 import '../providers/collection_provider.dart';
+import '../providers/fog_provider.dart';
 import '../providers/walk_session_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -19,22 +20,36 @@ class AchievementScreen extends StatefulWidget {
 }
 
 class _AchievementScreenState extends State<AchievementScreen> {
-  int _tab = 0;
-  static const _tabs = ['전체', '진행 중', '완료'];
+  late final TextEditingController _searchController;
+  AchievementStatusFilter _status = AchievementStatusFilter.all;
+  AchievementTypeFilter _type = AchievementTypeFilter.all;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final walk = context.watch<WalkSessionProvider>();
     final collection = context.watch<CollectionProvider>();
-    final stats = _buildStats(walk, collection);
+    final fog = context.watch<FogProvider>();
+    final stats = _buildStats(walk, collection, fog);
 
     final all = CollectionProvider.catalog;
-    final filtered = all.where((a) {
-      final done = a.isCompleted(stats);
-      if (_tab == 1) return !done;
-      if (_tab == 2) return done;
-      return true;
-    }).toList();
+    final filtered = AchievementFilter(
+      status: _status,
+      type: _type,
+      query: _query,
+    ).apply(all, stats);
 
     return SafeArea(
       child: Column(
@@ -47,35 +62,90 @@ class _AchievementScreenState extends State<AchievementScreen> {
               style: AppType.serif(size: 30, weight: FontWeight.w800),
             ),
           ),
-          _tabBar(),
+          _searchField(),
+          _statusTabs(),
+          _typeChips(),
           const Divider(height: 1),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              itemCount: filtered.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, i) => _card(filtered[i], stats),
-            ),
+            child: filtered.isEmpty
+                ? _empty()
+                : ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    itemCount: filtered.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, i) => _card(filtered[i], stats),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _tabBar() {
+  Widget _searchField() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() => _query = value),
+        style: AppType.sans(size: 14, color: AppColors.ink),
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: '업적 검색',
+          hintStyle: AppType.sans(size: 14, color: AppColors.inkFaint),
+          prefixIcon: const Icon(Icons.search, size: 20),
+          suffixIcon: _query.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: '검색 지우기',
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _query = '');
+                  },
+                ),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.72),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.line),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.line),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.ink),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statusTabs() {
+    const tabs = [
+      (AchievementStatusFilter.all, '전체'),
+      (AchievementStatusFilter.inProgress, '진행 중'),
+      (AchievementStatusFilter.completed, '완료'),
+    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       child: Row(
-        children: List.generate(_tabs.length, (i) {
-          final selected = i == _tab;
+        children: List.generate(tabs.length, (i) {
+          final item = tabs[i];
+          final selected = item.$1 == _status;
           return Padding(
             padding: const EdgeInsets.only(right: 20),
             child: GestureDetector(
-              onTap: () => setState(() => _tab = i),
+              onTap: () => setState(() => _status = item.$1),
               child: Column(
                 children: [
                   Text(
-                    _tabs[i],
+                    item.$2,
                     style: AppType.sans(
                       size: 15,
                       weight: selected ? FontWeight.w700 : FontWeight.w400,
@@ -94,12 +164,55 @@ class _AchievementScreenState extends State<AchievementScreen> {
     );
   }
 
+  Widget _typeChips() {
+    const filters = [
+      (AchievementTypeFilter.all, '전체'),
+      (AchievementTypeFilter.streak, '연속'),
+      (AchievementTypeFilter.region, '지역'),
+      (AchievementTypeFilter.distance, '거리'),
+      (AchievementTypeFilter.area, '면적'),
+    ];
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+        itemCount: filters.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final item = filters[index];
+          final selected = item.$1 == _type;
+          return ChoiceChip(
+            label: Text(item.$2),
+            selected: selected,
+            onSelected: (_) => setState(() => _type = item.$1),
+            labelStyle: AppType.sans(
+              size: 12,
+              weight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? Colors.white : AppColors.inkSoft,
+            ),
+            selectedColor: AppColors.ink,
+            backgroundColor: Colors.white.withValues(alpha: 0.72),
+            side: BorderSide(color: selected ? AppColors.ink : AppColors.line),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            visualDensity: VisualDensity.compact,
+          );
+        },
+      ),
+    );
+  }
+
   Widget _card(Achievement a, UserStats stats) {
     final progress = a.progress(stats);
     final shown = (progress * 100).round();
-    final color = a.metric.toString().contains('bike')
-        ? AppColors.stampPalette[1]
-        : AppColors.stampRed;
+    final color = switch (a.category) {
+      AchievementCategory.streak => AppColors.stampPalette[0],
+      AchievementCategory.region => AppColors.stampPalette[2],
+      AchievementCategory.distance => AppColors.stampPalette[1],
+      AchievementCategory.area => AppColors.stampPalette[4],
+    };
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -155,18 +268,26 @@ class _AchievementScreenState extends State<AchievementScreen> {
     );
   }
 
+  Widget _empty() {
+    return Center(
+      child: Text(
+        '일치하는 업적이 없어요',
+        style: AppType.sans(size: 14, color: AppColors.inkFaint),
+      ),
+    );
+  }
+
   /// 화면에 필요한 사용자 통계를 Provider들에서 조립.
   UserStats _buildStats(
     WalkSessionProvider walk,
     CollectionProvider collection,
+    FogProvider fog,
   ) {
     return UserStats(
       streakDays: walk.streakDays,
       regionsUnlocked: collection.unlockedCount,
       totalDistanceKm: walk.totalDistanceKm,
-      bikeDistanceKm: walk.distanceByMode(WalkMode.bike),
-      swimDistanceKm: walk.distanceByMode(WalkMode.swim),
-      hikeDistanceKm: walk.distanceByMode(WalkMode.hike),
+      totalClearedKm2: fog.totalAreaKm2,
     );
   }
 }

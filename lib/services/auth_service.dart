@@ -19,6 +19,7 @@ class SupabaseAuthService implements AuthService {
   bool get configured => config.isConfigured;
 
   SupabaseClient? get _client => configured ? Supabase.instance.client : null;
+  SupabaseClient? get client => _client;
 
   @override
   AuthAccount? get currentAccount =>

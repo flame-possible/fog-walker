@@ -3,10 +3,11 @@ enum AchievementMetric {
   streakDays, // 연속 산책일
   regionsUnlocked, // 해금한 지역 수
   totalDistanceKm, // 누적 걷기 거리
-  bikeDistanceKm, // 누적 자전거 거리
-  swimDistanceKm, // 누적 수영 거리
-  hikeDistanceKm, // 누적 하이킹 거리
+  totalClearedKm2, // 걷어낸 안개 면적
 }
+
+/// 업적 필터에서 쓰는 사용자-facing 분류.
+enum AchievementCategory { streak, region, distance, area }
 
 /// 업적 진행도 판정에 쓰이는 사용자 집계 통계.
 ///
@@ -16,17 +17,13 @@ class UserStats {
     this.streakDays = 0,
     this.regionsUnlocked = 0,
     this.totalDistanceKm = 0,
-    this.bikeDistanceKm = 0,
-    this.swimDistanceKm = 0,
-    this.hikeDistanceKm = 0,
+    this.totalClearedKm2 = 0,
   });
 
   final int streakDays;
   final int regionsUnlocked;
   final double totalDistanceKm;
-  final double bikeDistanceKm;
-  final double swimDistanceKm;
-  final double hikeDistanceKm;
+  final double totalClearedKm2;
 
   double valueFor(AchievementMetric m) {
     switch (m) {
@@ -36,12 +33,8 @@ class UserStats {
         return regionsUnlocked.toDouble();
       case AchievementMetric.totalDistanceKm:
         return totalDistanceKm;
-      case AchievementMetric.bikeDistanceKm:
-        return bikeDistanceKm;
-      case AchievementMetric.swimDistanceKm:
-        return swimDistanceKm;
-      case AchievementMetric.hikeDistanceKm:
-        return hikeDistanceKm;
+      case AchievementMetric.totalClearedKm2:
+        return totalClearedKm2;
     }
   }
 }
@@ -61,6 +54,19 @@ class Achievement {
   final String descKo;
   final AchievementMetric metric;
   final double goal;
+
+  AchievementCategory get category {
+    switch (metric) {
+      case AchievementMetric.streakDays:
+        return AchievementCategory.streak;
+      case AchievementMetric.regionsUnlocked:
+        return AchievementCategory.region;
+      case AchievementMetric.totalDistanceKm:
+        return AchievementCategory.distance;
+      case AchievementMetric.totalClearedKm2:
+        return AchievementCategory.area;
+    }
+  }
 
   /// 0.0~1.0 진행도. 목표 초과 시 1.0으로 캡.
   double progress(UserStats stats) {

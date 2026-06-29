@@ -50,16 +50,16 @@ void main() {
       expect(p, closeTo(0.9, 1e-9));
     });
 
-    test('자전거/수영/하이킹 거리 지표도 동작한다', () {
-      const bike = Achievement(
-        id: 'bike',
-        titleKo: '자전거 탐험가',
-        descKo: '누적 500km 자전거',
-        metric: AchievementMetric.bikeDistanceKm,
-        goal: 500,
+    test('안개를 걷어낸 면적 지표로 진행도를 계산한다', () {
+      const area = Achievement(
+        id: 'area',
+        titleKo: '안개 개척자',
+        descKo: '안개 1km² 걷어내기',
+        metric: AchievementMetric.totalClearedKm2,
+        goal: 1,
       );
-      final p = bike.progress(const UserStats(bikeDistanceKm: 375));
-      expect(p, closeTo(0.75, 1e-9));
+      final p = area.progress(const UserStats(totalClearedKm2: 0.25));
+      expect(p, closeTo(0.25, 1e-9));
     });
   });
 

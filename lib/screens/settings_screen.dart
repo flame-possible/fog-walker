@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/cloud_sync_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/location_service.dart';
 import '../theme/app_colors.dart';
@@ -26,6 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final sync = context.watch<CloudSyncProvider>();
 
     return SafeArea(
       child: ListView(
@@ -47,8 +49,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _actionRow(
             title: '클라우드 동기화',
-            subtitle: '기기 간 자동 백업 및 복원',
-            onTap: () => _toast('클라우드 동기화는 다음 단계에서 연결할게요.'),
+            subtitle: _syncSubtitle(sync),
+            onTap: auth.account == null || sync.isSyncing
+                ? null
+                : () async {
+                    final syncProvider = context.read<CloudSyncProvider>();
+                    await syncProvider.sync(auth.account);
+                    if (!mounted) return;
+                    final error = syncProvider.errorMessage;
+                    _toast(error == null ? '동기화 완료' : '동기화 실패: $error');
+                  },
           ),
           const SizedBox(height: 28),
           _sectionLabel('권한'),
@@ -109,6 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _toggleGoogleAccount(AuthProvider auth) async {
     final profile = context.read<ProfileProvider>();
+    final sync = context.read<CloudSyncProvider>();
     if (auth.account != null) {
       await auth.signOut();
       profile.clearAccount();
@@ -118,7 +129,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final account = await auth.signInWithGoogle();
     if (account != null && mounted) {
       profile.syncAccount(account);
+      await sync.sync(account);
     }
+  }
+
+  String _syncSubtitle(CloudSyncProvider sync) {
+    if (sync.isSyncing) return '동기화 중';
+    if (sync.errorMessage != null) return sync.errorMessage!;
+    final last = sync.lastSyncedAt;
+    if (last == null) return '기기 간 자동 백업 및 복원';
+    final hh = last.hour.toString().padLeft(2, '0');
+    final mm = last.minute.toString().padLeft(2, '0');
+    return '마지막 동기화 $hh:$mm';
   }
 
   Future<void> _openLocationSettings() async {

@@ -6,12 +6,14 @@ import 'data/app_database.dart';
 import 'data/fog_repository.dart';
 import 'data/region_repository.dart';
 import 'providers/auth_provider.dart';
+import 'providers/cloud_sync_provider.dart';
 import 'providers/collection_provider.dart';
 import 'providers/fog_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/walk_session_provider.dart';
 import 'screens/home_shell.dart';
 import 'services/auth_service.dart';
+import 'services/cloud_sync_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_typography.dart';
@@ -56,12 +58,22 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
     );
     final profile = ProfileProvider(box: AppDatabase.userProfile)
       ..syncProgress(stampCount: collection.unlockedCount);
-    final auth = AuthProvider(
-      service: SupabaseAuthService(config: supabaseConfig),
+    final authService = SupabaseAuthService(config: supabaseConfig);
+    final auth = AuthProvider(service: authService);
+    final cloudSync = CloudSyncProvider(
+      coordinator: AppSyncCoordinator(
+        remote: SupabaseSyncGateway(client: authService.client),
+        fogRepository: fogRepo,
+        fog: fog,
+        walk: walk,
+        collection: collection,
+        profile: profile,
+      ),
     );
     final account = auth.account;
     if (account != null) {
       profile.syncAccount(account);
+      await cloudSync.sync(account);
     }
 
     return _AppDependencies(
@@ -70,6 +82,7 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
       collection: collection,
       profile: profile,
       auth: auth,
+      cloudSync: cloudSync,
     );
   }
 
@@ -95,6 +108,7 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
             ChangeNotifierProvider.value(value: deps.collection),
             ChangeNotifierProvider.value(value: deps.profile),
             ChangeNotifierProvider.value(value: deps.auth),
+            ChangeNotifierProvider.value(value: deps.cloudSync),
           ],
           child: _wrapApp(const HomeShell()),
         );
@@ -119,12 +133,14 @@ class _AppDependencies {
     required this.collection,
     required this.profile,
     required this.auth,
+    required this.cloudSync,
   });
   final FogProvider fog;
   final WalkSessionProvider walk;
   final CollectionProvider collection;
   final ProfileProvider profile;
   final AuthProvider auth;
+  final CloudSyncProvider cloudSync;
 }
 
 class _SplashScreen extends StatelessWidget {

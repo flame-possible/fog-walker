@@ -30,12 +30,20 @@ class FogRepository {
 
   /// 저장된 모든 방문 셀을 로드한다.
   Set<(int, int)> loadAll() {
-    final result = <(int, int)>{};
+    return loadAllWithTimestamps().keys.toSet();
+  }
+
+  /// 저장된 모든 방문 셀과 최초 방문 timestamp를 로드한다.
+  Map<(int, int), int> loadAllWithTimestamps() {
+    final timestamped = <(int, int), int>{};
     for (final key in _box.keys) {
       final cell = parseKey(key.toString());
-      if (cell != null) result.add(cell);
+      final value = _box.get(key);
+      if (cell != null && value != null) {
+        timestamped[cell] = value;
+      }
     }
-    return result;
+    return timestamped;
   }
 
   /// 새 셀들을 저장 예약(debounce). [timestamp]는 최초 방문 시각.
@@ -60,6 +68,22 @@ class FogRepository {
     final batch = {for (final e in _pending.entries) keyOf(e.key): e.value};
     _pending.clear();
     await _box.putAll(batch);
+  }
+
+  /// 서버에서 내려받은 방문 셀을 로컬에 병합한다.
+  Future<int> mergeVisitedCells(Map<(int, int), int> remote) async {
+    await flush();
+    final additions = <String, int>{};
+    for (final entry in remote.entries) {
+      final key = keyOf(entry.key);
+      final local = _box.get(key);
+      if (local == null || entry.value < local) {
+        additions[key] = entry.value;
+      }
+    }
+    if (additions.isEmpty) return 0;
+    await _box.putAll(additions);
+    return additions.length;
   }
 
   /// 앱 종료/일시정지 시 강제 저장.
