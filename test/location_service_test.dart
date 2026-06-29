@@ -48,6 +48,21 @@ void main() {
     expect(position?.latitude, 37.5);
     expect(position?.longitude, 127.0);
   });
+
+  test('uses high accuracy when high accuracy mode is enabled', () async {
+    await LocationService().currentPosition(highAccuracy: true);
+
+    expect(
+      fakePlatform.lastCurrentPositionSettings?.accuracy,
+      LocationAccuracy.high,
+    );
+  });
+
+  test('uses medium accuracy when high accuracy mode is disabled', () async {
+    LocationService().positionStream(highAccuracy: false);
+
+    expect(fakePlatform.lastStreamSettings?.accuracy, LocationAccuracy.medium);
+  });
 }
 
 class FakeGeolocatorPlatform extends GeolocatorPlatform {
@@ -57,6 +72,8 @@ class FakeGeolocatorPlatform extends GeolocatorPlatform {
   Object? openAppSettingsError;
   Position? currentPosition;
   Object? currentPositionError;
+  LocationSettings? lastCurrentPositionSettings;
+  LocationSettings? lastStreamSettings;
 
   @override
   Future<bool> isLocationServiceEnabled() async => serviceEnabled;
@@ -76,6 +93,7 @@ class FakeGeolocatorPlatform extends GeolocatorPlatform {
 
   @override
   Future<Position> getCurrentPosition({LocationSettings? locationSettings}) {
+    lastCurrentPositionSettings = locationSettings;
     final error = currentPositionError;
     if (error != null) return Future.error(error);
     return Future.value(currentPosition ?? _position());
@@ -90,6 +108,7 @@ class FakeGeolocatorPlatform extends GeolocatorPlatform {
 
   @override
   Stream<Position> getPositionStream({LocationSettings? locationSettings}) {
+    lastStreamSettings = locationSettings;
     return const Stream.empty();
   }
 }

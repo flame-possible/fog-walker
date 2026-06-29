@@ -18,11 +18,13 @@ class AppDatabase {
   static const walkSessionsBox = 'walkSessions';
   static const regionProgressBox = 'regionProgress';
   static const userProfileBox = 'userProfile';
+  static const appSettingsBox = 'appSettings';
 
   static late Box<int> visitedCells;
   static late Box<WalkSession> walkSessions;
   static late Box<RegionProgress> regionProgress;
   static late Box<UserProfile> userProfile;
+  static late Box<dynamic> appSettings;
 
   /// 앱 시작 시 1회 호출. Hive 초기화 + 어댑터 등록 + 박스 오픈.
   static Future<void> init() async {
@@ -38,6 +40,7 @@ class AppDatabase {
     walkSessions = await Hive.openBox<WalkSession>(walkSessionsBox);
     regionProgress = await Hive.openBox<RegionProgress>(regionProgressBox);
     userProfile = await Hive.openBox<UserProfile>(userProfileBox);
+    appSettings = await Hive.openBox<dynamic>(appSettingsBox);
   }
 
   /// 테스트/초기화용 — 모든 사용자 데이터 삭제.
@@ -46,5 +49,6 @@ class AppDatabase {
     await walkSessions.clear();
     await regionProgress.clear();
     await userProfile.clear();
+    await appSettings.clear();
   }
 }

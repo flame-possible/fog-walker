@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../domain/fog_grid.dart';
 import '../domain/location_update_policy.dart';
+import '../providers/app_settings_provider.dart';
 import '../providers/collection_provider.dart';
 import '../providers/fog_provider.dart';
 import '../providers/profile_provider.dart';
@@ -26,24 +27,66 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   final _mapController = MapController();
   final _location = LocationService();
 
   StreamSubscription<Position>? _posSub;
+  AppSettingsProvider? _settings;
+  WalkSessionProvider? _walk;
   LocationStatus _status = LocationStatus.ready;
   LatLng _center = const LatLng(37.5400, 127.0050); // 서울 기본 중심
   String? _currentRegionId;
   bool _followMe = true;
+  bool _autoStartedSession = false;
+  bool? _lastHighAccuracy;
+  bool? _lastAutoRecord;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initLocation();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _walk = context.read<WalkSessionProvider>();
+    final settings = context.read<AppSettingsProvider>();
+    if (!identical(_settings, settings)) {
+      _settings?.removeListener(_handleSettingsChanged);
+      _settings = settings;
+      _lastHighAccuracy = settings.highAccuracy;
+      _lastAutoRecord = settings.autoRecord;
+      settings.addListener(_handleSettingsChanged);
+      if (_status == LocationStatus.ready) {
+        _syncRecordingFromSettings(settings);
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        final settings = _settings;
+        if (settings != null) _syncRecordingFromSettings(settings);
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _stopAutoRecording();
+        break;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _settings?.removeListener(_handleSettingsChanged);
+    _stopAutoRecording();
     _posSub?.cancel();
     _mapController.dispose();
     super.dispose();
@@ -56,11 +99,19 @@ class _MapScreenState extends State<MapScreen> {
 
     if (status == LocationStatus.ready) {
       await _applyInitialLocation();
+      if (!mounted) return;
       _startTracking();
+      final settings = _settings;
+      if (settings != null) _syncRecordingFromSettings(settings);
+    } else {
+      _stopAutoRecording();
     }
   }
 
   Future<void> _applyInitialLocation() async {
+    final highAccuracy =
+        (_settings ?? context.read<AppSettingsProvider>()).highAccuracy;
+
     // 빠른 초기 중심: 마지막 위치가 있으면 먼저 반영한다.
     final last = await _location.lastKnown();
     if (last != null && mounted) {
@@ -69,7 +120,7 @@ class _MapScreenState extends State<MapScreen> {
 
     // 웹은 lastKnownPosition을 지원하지 않는 경우가 많아서 현재 위치를
     // 한 번 직접 조회해 첫 화면부터 실제 위치에 맞춘다.
-    final current = await _location.currentPosition();
+    final current = await _location.currentPosition(highAccuracy: highAccuracy);
     if (current != null && mounted) {
       _applyPoint(
         LatLng(current.latitude, current.longitude),
@@ -79,11 +130,12 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _startTracking() {
+    final highAccuracy =
+        (_settings ?? context.read<AppSettingsProvider>()).highAccuracy;
     _posSub?.cancel();
-    _posSub = _location.positionStream().listen(
-      _handleLocation,
-      onError: _handleLocationError,
-    );
+    _posSub = _location
+        .positionStream(highAccuracy: highAccuracy)
+        .listen(_handleLocation, onError: _handleLocationError);
   }
 
   /// 실제 GPS 위치 이벤트.
@@ -93,7 +145,53 @@ class _MapScreenState extends State<MapScreen> {
 
   void _handleLocationError(Object error) {
     if (!mounted) return;
+    _stopAutoRecording();
     setState(() => _status = LocationStatus.denied);
+  }
+
+  void _handleSettingsChanged() {
+    final settings = _settings;
+    if (settings == null) return;
+
+    final highAccuracyChanged =
+        _lastHighAccuracy != null && _lastHighAccuracy != settings.highAccuracy;
+    final autoRecordChanged =
+        _lastAutoRecord != null && _lastAutoRecord != settings.autoRecord;
+
+    _lastHighAccuracy = settings.highAccuracy;
+    _lastAutoRecord = settings.autoRecord;
+
+    if (highAccuracyChanged && _status == LocationStatus.ready) {
+      unawaited(_applyInitialLocation());
+      _startTracking();
+    }
+    if (autoRecordChanged) {
+      _syncRecordingFromSettings(settings);
+    }
+  }
+
+  void _syncRecordingFromSettings(AppSettingsProvider settings) {
+    final walk = _walk;
+    if (walk == null) return;
+
+    if (!settings.autoRecord || _status != LocationStatus.ready) {
+      _stopAutoRecording();
+      return;
+    }
+
+    if (!walk.isWalking) {
+      walk.start();
+      _autoStartedSession = true;
+    }
+  }
+
+  void _stopAutoRecording() {
+    final walk = _walk;
+    if (!_autoStartedSession || walk == null) return;
+    _autoStartedSession = false;
+    if (walk.isWalking) {
+      unawaited(walk.stop());
+    }
   }
 
   /// 위치를 받아 세 Provider를 조율한다(단방향 흐름). 실제 GPS와 디버그
@@ -165,11 +263,12 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final fog = context.watch<FogProvider>();
+    final settings = context.watch<AppSettingsProvider>();
 
     return Scaffold(
       body: Stack(
         children: [
-          _buildMap(fog),
+          _buildMap(fog, settings.mapStyle),
           _buildTopChip(),
           if (_status != LocationStatus.ready) _buildPermissionBanner(),
           _buildRecenterButton(),
@@ -178,7 +277,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildMap(FogProvider fog) {
+  Widget _buildMap(FogProvider fog, MapStyle mapStyle) {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
@@ -201,7 +300,8 @@ class _MapScreenState extends State<MapScreen> {
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          key: ValueKey(mapStyle),
+          urlTemplate: mapStyle.tileUrlTemplate,
           userAgentPackageName: 'com.fogwalker.app',
           tileProvider: NetworkTileProvider(),
         ),

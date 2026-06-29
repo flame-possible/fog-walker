@@ -5,6 +5,7 @@ import 'config/supabase_config.dart';
 import 'data/app_database.dart';
 import 'data/fog_repository.dart';
 import 'data/region_repository.dart';
+import 'providers/app_settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cloud_sync_provider.dart';
 import 'providers/collection_provider.dart';
@@ -52,6 +53,7 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
     final fog = FogProvider(repository: fogRepo)
       ..loadInitial(fogRepo.loadAll());
     final walk = WalkSessionProvider(box: AppDatabase.walkSessions);
+    final settings = AppSettingsProvider(box: AppDatabase.appSettings);
     final collection = CollectionProvider(
       repository: regionRepo,
       progressBox: AppDatabase.regionProgress,
@@ -79,6 +81,7 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
     return _AppDependencies(
       fog: fog,
       walk: walk,
+      settings: settings,
       collection: collection,
       profile: profile,
       auth: auth,
@@ -105,6 +108,7 @@ class _FogWalkerBootstrapState extends State<FogWalkerBootstrap> {
           providers: [
             ChangeNotifierProvider.value(value: deps.fog),
             ChangeNotifierProvider.value(value: deps.walk),
+            ChangeNotifierProvider.value(value: deps.settings),
             ChangeNotifierProvider.value(value: deps.collection),
             ChangeNotifierProvider.value(value: deps.profile),
             ChangeNotifierProvider.value(value: deps.auth),
@@ -130,6 +134,7 @@ class _AppDependencies {
   _AppDependencies({
     required this.fog,
     required this.walk,
+    required this.settings,
     required this.collection,
     required this.profile,
     required this.auth,
@@ -137,6 +142,7 @@ class _AppDependencies {
   });
   final FogProvider fog;
   final WalkSessionProvider walk;
+  final AppSettingsProvider settings;
   final CollectionProvider collection;
   final ProfileProvider profile;
   final AuthProvider auth;

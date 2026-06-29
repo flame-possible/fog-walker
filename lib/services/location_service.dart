@@ -40,10 +40,10 @@ class LocationService {
   }
 
   /// 위치 변경 스트림. 10m 이상 움직였을 때만 이벤트(배터리·노이즈 절감).
-  Stream<Position> positionStream() {
-    const settings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
+  Stream<Position> positionStream({bool highAccuracy = true}) {
+    final settings = LocationSettings(
+      accuracy: highAccuracy ? LocationAccuracy.high : LocationAccuracy.medium,
+      distanceFilter: highAccuracy ? 10 : 25,
     );
     return Geolocator.getPositionStream(locationSettings: settings);
   }
@@ -52,12 +52,14 @@ class LocationService {
   ///
   /// 브라우저 권한 거부, 타임아웃, 플랫폼 미지원 등은 지도 초기화 전체를
   /// 멈추지 않도록 null로 접는다.
-  Future<Position?> currentPosition() async {
+  Future<Position?> currentPosition({bool highAccuracy = true}) async {
     try {
       return await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 12),
+        locationSettings: LocationSettings(
+          accuracy: highAccuracy
+              ? LocationAccuracy.high
+              : LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 12),
         ),
       );
     } catch (_) {
